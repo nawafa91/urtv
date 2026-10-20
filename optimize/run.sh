@@ -26,7 +26,7 @@ title() {
     mine)        echo "Disable the household's optional picks (lists/mine.txt)" ;;
     tweaks)      echo "Speed and memory tweaks" ;;
     screensaver) echo "Install شاشة تلفزيونك" ;;
-    launcher)    echo "Install the home screen (safety switch on)" ;;
+    launcher)    echo "Install and preview home screen (original default retained)" ;;
     after)       echo "Measure after (restart + 3 min)" ;;
     after-saver) echo "Measure our screensaver (1 min)" ;;
     report)      echo "Write the report" ;;
@@ -62,7 +62,7 @@ report() {
   echo
   echo "Home: $(tv "cmd package resolve-activity --brief -c android.intent.category.HOME -a android.intent.action.MAIN" | tail -1)"
   echo "Screensaver: $(tv "settings get secure screensaver_components")"
-  echo "Undo everything: optimize/reset.sh"
+  echo "Restore recorded Home/screensaver only (keep apps/settings): optimize/reset.sh"
 }
 
 do_step() {

@@ -1,99 +1,76 @@
 #!/usr/bin/env bash
-# Download the latest APKs from GitHub and install them on the TV.
-#   optimize/install.sh saver      شاشة تلفزيونك: install + make it the screensaver
-#   optimize/install.sh launcher   the home screen: install + make it the default Home
-#   optimize/install.sh all        both
-# The first install of the screensaver replaces an APK signed with another key: uninstall the old one first
-# (pm uninstall sa.urtv.screensaver) — this script does that only if a plain install fails.
+# Preflight EVERY requested release before ADB. Default: install + preview, retain default Home.
+# Optional --trial-home is a 5-minute trial, NOT reboot-safe. No system package is disabled.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PY="${PY:-optimize/venv/bin/python}"
-REL=https://github.com/tshi-dev/UrTV/releases/download/apk-latest
-what="${1:?usage: optimize/install.sh saver|launcher|all}"
-
-push_install() {   # $1 apk name, $2 package
-  curl -fsSL -o "optimize/$1" "$REL/$1"
-  "$PY" -I optimize/tv.py --push-b64 "optimize/$1" "/data/local/tmp/$1"
-  local out
-  out=$("$PY" -I optimize/tv.py "pm install -r /data/local/tmp/$1")
-  if ! grep -q Success <<< "$out"; then
-    # only a signing-key clash justifies removing the installed app (and its settings); anything else stops here
-    if grep -qE 'UPDATE_INCOMPATIBLE|signatures do not match' <<< "$out"; then
-      echo "An older $2 signed with another key is installed: removing it, then installing again."
-      "$PY" -I optimize/tv.py "pm uninstall $2" || true
-      "$PY" -I optimize/tv.py "pm install -r /data/local/tmp/$1" | grep Success
-    else
-      echo "!! Install of $1 failed: $out"; exit 1
-    fi
+what="${1:?usage: optimize/install.sh saver|launcher|all [--trial-home]}"
+case "$what" in saver|launcher|all) ;; *) echo 'Invalid install target.' >&2; exit 2 ;; esac
+trial=${2:-}
+[[ $# -le 2 && ( -z "$trial" || "$trial" = --trial-home ) ]] || exit 2
+[[ -z "$trial" || "$what" != saver ]] || exit 2
+REL=$(python3 - <<'SOURCE'
+import json,re
+from pathlib import Path
+s=json.loads(Path('config/repository.json').read_text())
+if not re.fullmatch(r'[\w.-]+/[\w.-]+',s['repository']) or not re.fullmatch(r'apk-v[1-9][0-9]*',s['release_tag']):
+    raise SystemExit('Configure an explicit approved apk-vN release; latest/moving tags are refused.')
+print(f"https://github.com/{s['repository']}/releases/download/{s['release_tag']}")
+SOURCE
+)
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+apks=()
+[[ "$what" = launcher ]] || apks+=(urtv-screensaver.apk)
+[[ "$what" = saver ]] || apks+=(urtv-home.apk)
+for apk in "${apks[@]}"; do
+  if ! curl --proto '=https' --proto-redir '=https' -fSL --retry 2 --connect-timeout 15 --max-time 180 -o "$tmp/$apk" "$REL/$apk"; then
+    echo "!! Published release unavailable: $REL/$apk. No TV action was started." >&2; exit 1
   fi
-  "$PY" -I optimize/tv.py "rm -f /data/local/tmp/$1"
-}
-
-if [ "$what" = saver ] || [ "$what" = all ]; then
-  push_install urtv-screensaver.apk sa.urtv.screensaver
-  printf '%s\n' \
-    "settings put secure screensaver_enabled 1" \
-    "settings put secure screensaver_components sa.urtv.screensaver/.ScreenDream" \
-    "settings put secure screensaver_default_component sa.urtv.screensaver/.ScreenDream" \
-    "am start -n sa.urtv.screensaver/.SettingsActivity" \
-    | "$PY" -I optimize/tv.py --batch
-  echo "Screensaver installed and selected. Its settings screen is open on the TV."
+  python3 - "$tmp/$apk" <<'APK'
+import sys,zipfile
+try:
+    with zipfile.ZipFile(sys.argv[1]) as z:
+        if 'AndroidManifest.xml' not in z.namelist() or z.testzip(): raise ValueError('invalid APK archive')
+except Exception as e: raise SystemExit(f'Invalid release APK; no TV action started: {e}')
+APK
+done
+tv() { "$PY" -I optimize/tv.py --checked "$1"; }
+helper='sh /data/local/tmp/urtv-home-guard.sh'
+"$PY" -I optimize/tv.py --push-b64 optimize/home-guard.sh /data/local/tmp/urtv-home-guard.sh
+tv "$helper capture"   # actual original, saved on this device BEFORE install/settings changes
+for apk in "${apks[@]}"; do
+  "$PY" -I optimize/tv.py --push-b64 "$tmp/$apk" "/data/local/tmp/$apk"
+  out=$(tv "pm install -r /data/local/tmp/$apk")
+  if ! grep -q '^Success' <<< "$out"; then
+    echo "!! Install failed; no uninstall or data clearing will be attempted: $out" >&2; exit 1
+  fi
+  tv "rm -f /data/local/tmp/$apk"
+done
+if [[ "$what" != launcher ]]; then
+  tv 'settings put secure screensaver_enabled 1 && settings put secure screensaver_components sa.urtv.screensaver/.ScreenDream && settings put secure screensaver_default_component sa.urtv.screensaver/.ScreenDream'
+  tv "test \"\$(settings get secure screensaver_components)\" = sa.urtv.screensaver/.ScreenDream"
 fi
-
-if [ "$what" = launcher ] || [ "$what" = all ]; then
-  # Which stock home does this TV have? Google TV sets: launcherx. Older Android TV: tvlauncher.
-  if "$PY" -I optimize/tv.py "pm list packages com.google.android.apps.tv.launcherx" | grep -q launcherx; then
-    STOCK=com.google.android.apps.tv.launcherx/com.google.android.apps.tv.launcherx.home.HomeActivity
+if [[ "$what" != saver ]]; then
+  if [[ "$trial" = --trial-home ]]; then
+    echo 'WARNING: temporary Home trial is NOT reboot-safe; original Home stays enabled. Recovery requires power and a live watchdog.' >&2
+    token=$(python3 -c 'import secrets; print(secrets.token_hex(16))')
+    tv "$helper arm $token"
+    armed=no
+    for attempt in 1 2 3 4 5; do
+      sleep 1
+      if tv "$helper status $token"; then armed=yes; break; fi
+    done
+    [[ "$armed" = yes ]] || { echo '!! Recovery not verified. Home was not changed.' >&2; exit 1; }
+    # Status + set in ONE checked remote shell: failed verification cannot reach set-home.
+    tv "$helper status $token && cmd package set-home-activity --user 0 sa.urtv.home/.MainActivity"
+    tv 'input keyevent KEYCODE_HOME'
+    sleep 2
+    tv "$helper trial-status $token"
+    echo 'Trial only: recovery remains armed and restores recorded Home in 5 minutes.'
   else
-    STOCK=com.google.android.tvlauncher/.MainActivity
+    tv 'am start -n sa.urtv.home/.MainActivity'
+    echo 'Preview opened. Default Home and all system packages retained.'
   fi
-  echo "Stock home: $STOCK"
-
-  # 1. The new home must be installed and working BEFORE anything is disabled.
-  push_install urtv-home.apk sa.urtv.home
-  "$PY" -I optimize/tv.py "pm grant sa.urtv.home android.permission.ACCESS_FINE_LOCATION" || true
-
-  # 2. Arm the safety switch on the TV: it restores the stock home in 300 s unless we confirm (slow ADB needs time).
-  "$PY" -I optimize/tv.py --push-b64 optimize/deadman.sh /data/local/tmp/deadman.sh
-  printf '%s\n' \
-    "rm -f /data/local/tmp/home_ok" \
-    "nohup sh /data/local/tmp/deadman.sh $STOCK 300 > /dev/null 2>&1 &" \
-    | "$PY" -I optimize/tv.py --batch
-  echo "Safety switch armed: the stock home comes back by itself in 5 minutes unless the new home works."
-
-  # 3. Switch. Setup app first, then the stock home (this order avoided the black screen).
-  printf '%s\n' \
-    "cmd package set-home-activity --user 0 sa.urtv.home/.MainActivity" \
-    "pm disable-user --user 0 com.google.android.tungsten.setupwraith" \
-    "pm disable-user --user 0 ${STOCK%%/*}" \
-    "cmd package set-home-activity --user 0 sa.urtv.home/.MainActivity" \
-    "am force-stop com.android.tv.settings" \
-    "input keyevent KEYCODE_HOME" \
-    | "$PY" -I optimize/tv.py --batch
-  # 4. Verify Home really opens the new launcher (a few tries: a slow TV), then disarm the switch.
-  ours=no
-  for try in 1 2 3; do
-    sleep 6
-    if "$PY" -I optimize/tv.py "dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'" \
-         | grep -q sa.urtv.home; then ours=yes; break; fi
-    "$PY" -I optimize/tv.py "input keyevent KEYCODE_HOME" > /dev/null
-  done
-  if [ "$ours" = yes ]; then
-    "$PY" -I optimize/tv.py "touch /data/local/tmp/home_ok"
-    # the switch may have fired already if ADB was very slow: then the stock home is back, say so and stop
-    if ! "$PY" -I optimize/tv.py "cmd package resolve-activity --brief -c android.intent.category.HOME -a android.intent.action.MAIN" \
-         | grep -q sa.urtv.home; then
-      echo "!! The safety switch put the stock home back (ADB was too slow). Nothing is broken: run the same command again."
-      exit 1
-    fi
-    # 5. Only now: the stock home's helpers are dead weight (restore.sh brings them back).
-    grep -vE '^\s*(#|$)' optimize/lists/home-replaced.txt | awk '{print "pm disable-user --user 0 " $1}' \
-      | "$PY" -I optimize/tv.py --batch > /dev/null || true
-    echo "Launcher is home. Press Home from inside an app to double-check."
-    echo "Undo everything: optimize/reset.sh"
-  else
-    echo "!! Home did not open the new launcher. Leave the TV alone: the stock home returns within 5 minutes."
-    echo "   Some TCL firmware pins Home to the stock launcher; on those sets keep the stock home."
-    exit 1
-  fi
-fi
+else tv 'am start -n sa.urtv.screensaver/.SettingsActivity'; fi
+echo 'Return without removing UrTV or its settings: bash optimize/restore.sh'

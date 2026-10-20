@@ -27,6 +27,9 @@ public class SaverReceiver extends BroadcastReceiver {
         Prefs p = new Prefs(c);
         String action = String.valueOf(i.getAction());
         switch (action) {
+            case "sa.urtv.screensaver.ROLLBACK":
+                setResultData(Updater.rollback(c));
+                return;
             case "sa.urtv.screensaver.GET":
                 setResultData(describe(p));
                 return;

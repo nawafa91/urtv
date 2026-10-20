@@ -23,7 +23,7 @@ import java.util.Collections;
  */
 final class HomeCard {
     private static final Uri CONFIG = Uri.parse("content://sa.urtv.screensaver.config");
-    private static final String FONTS = "https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/fonts/";
+    private static final String FONTS = BuildConfig.CONTENT_BASE + "assets/fonts/";
 
     private final Activity activity;
     private final ViewGroup parent;
@@ -83,6 +83,16 @@ final class HomeCard {
         web.setHorizontalScrollBarEnabled(false);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         web.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String pageUrl) {
+                super.onPageFinished(view, pageUrl);
+                // Keep the shared page intact; only this launcher's WebView uses Latin digits.
+                try (java.util.Scanner script = new java.util.Scanner(
+                        activity.getAssets().open("latin-digits.js"), "UTF-8")) {
+                    view.evaluateJavascript(script.useDelimiter("\\A").next(), null);
+                } catch (java.io.IOException ignored) { }
+            }
+
             // the page asks GitHub for its fonts; answer from the APK
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {

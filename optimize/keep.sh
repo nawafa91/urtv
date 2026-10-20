@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 PY="${PY:-optimize/venv/bin/python}"
 off=$("$PY" -I optimize/tv.py "pm list packages -d" | sed -n 's/^package://p' | tr -d '\r' \
       | grep -Fxf <(grep -vE '^\s*(#|$)' optimize/lists/keep.txt | awk '{print $1}') || true)
-# the stock home and setup app are in keep.txt but belong to install.sh launcher: leave them to it
+# Legacy exclusions below are not changed by installer anymore; recorded Home is restored by restore.sh.
 off=$(printf '%s\n' $off | grep -vxE 'com.google.android.apps.tv.launcherx|com.google.android.tvlauncher|com.google.android.tungsten.setupwraith|com.tcl.keycustomfunctionservice' || true)
 if [ -z "$off" ]; then echo "Protected features: all on."; exit 0; fi
 echo "Turning back on (they must never be off):"

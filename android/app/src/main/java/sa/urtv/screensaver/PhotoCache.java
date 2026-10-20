@@ -17,9 +17,10 @@ import java.util.Comparator;
  * opens at once. Fonts and bundled photos come from the APK; hosted photos are downloaded once and kept.
  */
 final class PhotoCache {
-    static final String REPO = "https://raw.githubusercontent.com/tshi-dev/UrTV/master/";
+    static final String REPO = BuildConfig.CONTENT_BASE;
     private static final String BUNDLED = REPO + "assets/backgrounds/", HOSTED = REPO + "photos/",
         FONTS = REPO + "assets/fonts/";
+    private static final String CALM = REPO + "assets/screensaver/";
     private static final int KEEP = 12;   // the 5-photo set plus room for the next one
 
     private PhotoCache() {}
@@ -34,6 +35,10 @@ final class PhotoCache {
                 java.util.Map<String, String> h = new java.util.HashMap<>();
                 h.put("Access-Control-Allow-Origin", "*");
                 return new WebResourceResponse("font/woff2", null, 200, "OK", h, c.getAssets().open("fonts/" + name));
+            }
+            if (url.startsWith(CALM)) {
+                String name = safeName(url.substring(CALM.length()));
+                return name == null ? null : jpeg(c.getAssets().open("screensaver/" + name));
             }
             if (url.startsWith(BUNDLED)) {
                 String name = safeName(url.substring(BUNDLED.length()));

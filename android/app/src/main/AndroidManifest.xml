@@ -83,6 +83,7 @@
                 <action android:name="sa.urtv.screensaver.SET" />
                 <action android:name="sa.urtv.screensaver.CITIES" />
                 <action android:name="sa.urtv.screensaver.UPDATE" />
+                <action android:name="sa.urtv.screensaver.ROLLBACK" />
             </intent-filter>
         </receiver>
 

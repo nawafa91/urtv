@@ -1,3 +1,8 @@
+> Independent branch safety rules: [TCL-READINESS.md](TCL-READINESS.md) supersedes the legacy workflow below.
+> Do not run the full optimization workflow for a preview. The installer never disables original Home,
+> defaults to preview, requires a published signed apk-vN release, and has no reboot-safe Home switch.
+> reset/restore retain both apps and settings; they do not undo debloat/tweaks.
+
 # Set up a TV with تلفزيونك: the prompt for your AI agent
 
 **On the TV first:** Settings → System → About → press OK on **Build** 7 times → back → Developer options →
@@ -8,7 +13,7 @@ everything below the line.
 
 ---
 
-Set up my Android TV / Google TV with **تلفزيونك** from https://github.com/tshi-dev/UrTV: a faster TV
+Set up my Android TV / Google TV with **تلفزيونك** from https://github.com/nawafa91/urtv: a faster TV
 (bloat off, safely), an Arabic home screen, and the screensaver «شاشة تلفزيونك». Talk to me in Arabic (or my
 language); keep commands in English.
 
@@ -22,11 +27,10 @@ language); keep commands in English.
 - Never send `reboot` as a shell command. Restart only with `optimize/venv/bin/python -I optimize/tv.py --reboot`.
 - Never disable anything in `optimize/lists/keep.txt` (AirPlay, Chromecast, mirroring, voice, remote, inputs,
   tuner, firmware updates, Play Store, Google services), and never edit `keep.txt` to get past a refusal. Never
-  disable the TV's own home screen or setup app yourself; only `optimize/install.sh launcher` does that, behind a
-  5-minute safety switch.
+  disable the TV's own home screen or setup app yourself; the installer also keeps them enabled.
 - Never uninstall system apps, never `pm clear`, never factory-reset, never touch accounts, Wi-Fi, network or
   developer settings (turning ADB off locks us out). Never delete `optimize/run/` or `optimize/backup-*.txt`: they
-  are how we undo. Everything is reversible: `optimize/reset.sh` puts the TV back as it came.
+  are how we undo. `optimize/reset.sh` restores recorded Home/screensaver selection without removing UrTV; debloat/tweaks need separate review.
 - Ask me before anything not in this prompt. If something fails twice, stop, show me the output, propose a fix.
 - Never tell me something worked without its proof: the script's own success line, or a screenshot you looked at.
 
@@ -64,7 +68,7 @@ Anything else, or anything twice: stop, show me the output and what you think it
 ## 1. Connect and look (5 minutes)
 
 ```
-git clone https://github.com/tshi-dev/UrTV; cd UrTV && git pull   # always the latest
+git clone https://github.com/nawafa91/urtv; cd urtv && git pull   # always the latest
 optimize/setup.sh
 optimize/find-tv.sh                       # accept "Allow USB debugging?" on the TV, tick "Always allow"
 optimize/venv/bin/python -I optimize/tv.py --probe

@@ -2,15 +2,18 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
+<meta name="urtv-content-contract" content="1">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>شاشة تلفزيونك</title>
 <style>
-  @font-face{font-family:'Thmanyah';font-weight:300;font-style:normal;font-display:block;src:url("https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/fonts/Thmanyah-Light.woff2") format("woff2")}
-  @font-face{font-family:'Thmanyah';font-weight:400;font-style:normal;font-display:block;src:url("https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/fonts/Thmanyah-Regular.woff2") format("woff2")}
-  @font-face{font-family:'Thmanyah';font-weight:500;font-style:normal;font-display:block;src:url("https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/fonts/Thmanyah-Medium.woff2") format("woff2")}
+  @font-face{font-family:'Thmanyah';font-weight:300;font-style:normal;font-display:block;src:url("https://raw.githubusercontent.com/nawafa91/urtv/6774794aa0a6fe09d1af5433119b5029d720ff43/assets/fonts/Thmanyah-Light.woff2") format("woff2")}
+  @font-face{font-family:'Thmanyah';font-weight:400;font-style:normal;font-display:block;src:url("https://raw.githubusercontent.com/nawafa91/urtv/6774794aa0a6fe09d1af5433119b5029d720ff43/assets/fonts/Thmanyah-Regular.woff2") format("woff2")}
+  @font-face{font-family:'Thmanyah';font-weight:500;font-style:normal;font-display:block;src:url("https://raw.githubusercontent.com/nawafa91/urtv/6774794aa0a6fe09d1af5433119b5029d720ff43/assets/fonts/Thmanyah-Medium.woff2") format("woff2")}
   /* ﷺ and ﴿﴾ only (2 KB subset of Noto Naskh Arabic, OFL): Thmanyah has no glyph for them */
   @font-face{font-family:'NotoMarks';font-style:normal;font-weight:400;src:url("data:font/woff2;base64,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") format("woff2")}
-  @font-face{font-family:'ThmanyahDisplay';font-weight:700;font-style:normal;font-display:block;src:url("https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/fonts/ThmanyahDisplay-Bold.woff2") format("woff2")}
+  @font-face{font-family:'ThmanyahDisplay';font-weight:700;font-style:normal;font-display:block;src:url("https://raw.githubusercontent.com/nawafa91/urtv/6774794aa0a6fe09d1af5433119b5029d720ff43/assets/fonts/ThmanyahDisplay-Bold.woff2") format("woff2")}
+
+  @font-face{font-family:Reminders;font-style:normal;font-weight:400;src:url("https://raw.githubusercontent.com/nawafa91/urtv/6774794aa0a6fe09d1af5433119b5029d720ff43/assets/fonts/NotoNaskhArabic-Reminders.woff2") format("woff2")}
 
   :root{
     --sand:#F6EFE0;
@@ -45,6 +48,7 @@
     background-size:cover;
     background-position:center 26%;
     background-repeat:no-repeat;
+    filter:saturate(.65);
     transform:scale(1.03);   /* edges stay covered while it settles */
   }
   /* each photo's darkness as a plain black layer: same look as filter:brightness, nothing to recompute */
@@ -133,13 +137,15 @@
 
   .dates{text-align:right;flex-shrink:0}
   .hijri{font-size:clamp(19px,1.86vw,37px);font-weight:500;color:var(--sand);line-height:1.3}
-  .greg{margin-top:.55vh;font-size:clamp(12px,1.06vw,21px);font-weight:300;color:var(--dim)}
+  .greg{margin-top:.55vh;font-size:clamp(19px,1.86vw,37px);font-weight:500;color:var(--sand)}
   /* starts at the screen edge, under the first letters, and fades toward the middle */
   .rule{margin-top:1.2vh;width:clamp(100px,9vw,190px);height:1px;margin-left:auto;margin-right:0;
     background:linear-gradient(270deg,var(--gold),rgba(220,184,111,0))}
 
   /* the card keeps its width on the left; the clock is centred in the space between it and the right edge */
   .mid{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4.5vw}
+  .mid.no-card{grid-template-columns:1fr}
+  .mid.no-card .clockwrap{grid-column:1}
   .clockwrap{display:flex;flex-direction:column;align-items:center;justify-self:center}
   .clock{
     display:flex;align-items:baseline;justify-content:center;direction:ltr;
@@ -241,6 +247,31 @@
   .stage{transition:transform 3s ease}
   .sc{color:#E0BA74;letter-spacing:.02em}
 
+  html:not(.widget) .stage{grid-template-rows:auto minmax(0,1fr) auto auto}
+  html.widget .reminder-card,html.widget .prayer-schedule{display:none}
+  .clockwrap{min-width:0;max-width:100%}
+  html.has-reminders .clock{font-size:clamp(74px,min(13vw,21vh),240px)}
+  .reminder-card{width:min(980px,100%);margin-top:2vh;padding:1vh 1.5vw;
+    background:rgba(4,14,9,.38);border:1px solid rgba(220,184,111,.18);border-radius:12px;text-align:center}
+  .reminder-card[hidden]{display:none}
+  .reminder-title,.reminder-source{font-family:Thmanyah,sans-serif;color:var(--gold);font-size:clamp(11px,.85vw,17px);line-height:1.6}
+  .reminder-text{font-family:Reminders,serif;font-size:clamp(16px,1.4vw,27px);line-height:1.65;color:#F6EFE0;
+    margin:.4vh 0;white-space:normal;overflow-wrap:break-word;font-weight:400}
+  .prayer-schedule{min-width:0;text-align:center}
+  .prayer-schedule ol{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1vw;list-style:none;margin:.6vh 0}
+  .prayer-schedule li{padding:.8vh .6vw;border-radius:8px;background:rgba(4,14,9,.35);border:1px solid rgba(220,184,111,.12)}
+  .prayer-schedule li.next{background:rgba(110,85,31,.3);border-color:rgba(220,184,111,.7);color:#FFE9B8}
+  .prayer-schedule .prayer-at{display:block;font-size:clamp(15px,1.4vw,27px);direction:ltr;font-variant-numeric:tabular-nums;margin-top:.3vh}
+  .schedule-heading,.schedule-countdown{font-size:clamp(12px,1vw,19px);line-height:1.5}
+  .schedule-countdown{color:var(--gold)}
+  .prayer-method{font-size:clamp(10px,.7vw,14px);line-height:1.5;color:var(--dim)}
+
+  /* At small logical TV heights, reserve space for complete reminders above the prayers.
+     Keep the normal clock size at 720p/1080p and when reminders are disabled. */
+  @media (max-height:600px){
+    html:not(.widget).has-reminders .clock{font-size:clamp(74px,min(13vw,16.5vh),240px)}
+  }
+
   @media (max-aspect-ratio:5/4){
     .top{flex-direction:column-reverse;gap:1.4vh}
     .bottom{grid-template-columns:1fr 1fr}
@@ -269,7 +300,7 @@
 
     <div class="markets">
       <div class="wxline"><span class="wxt" id="wx-temp"></span><span class="wxd" id="wx-desc"></span></div>
-      <div class="wxsub"><span id="wx-city">الرياض</span><span class="wxr" id="wx-range"></span></div>
+      <div class="wxsub"><span id="wx-city">ينبع الصناعية</span><span class="wxr" id="wx-range"></span></div>
       <div class="rule l"></div>
       <div class="mk">
         <span class="m"><span>تاسي</span><span id="tasi-chg" class="delta" hidden></span></span>
@@ -284,13 +315,25 @@
       <div class="clock">
         <span class="ampm" id="ck-ap">—</span><span class="d" id="ck-h">--</span><span class="sep">:</span><span class="d" id="ck-m">--</span>
       </div>
-      <div class="subline"><span class="dot"></span><span id="clock-sub">بتوقيت الرياض</span></div>
+      <div class="subline"><span class="dot"></span><span id="clock-sub">بتوقيت ينبع الصناعية</span></div>
+      <article class="reminder-card" id="reminder-card" hidden aria-label="آية أو حديث">
+        <div class="reminder-title" id="reminder-title"></div>
+        <p class="reminder-text" id="reminder-text" dir="rtl"></p>
+        <div class="reminder-source" id="reminder-source"></div>
+      </article>
     </div>
 
     <div class="week">
       <div class="hd" id="week-hd">هذا الأسبوع</div>
       <ul id="week-list"><li class="empty">جارٍ التحميل…</li></ul>
     </div>
+  </section>
+
+  <section class="prayer-schedule" aria-label="الصلوات الخمس">
+    <div class="schedule-heading" id="schedule-heading">الصلوات الخمس · ينبع الصناعية</div>
+    <ol id="prayer-schedule"></ol>
+    <div class="schedule-countdown" id="schedule-countdown"></div>
+    <div class="prayer-method" id="prayer-method"></div>
   </section>
 
   <footer class="bottom">
@@ -301,7 +344,7 @@
     </div>
 
     <div class="panel p-mid">
-      <div class="label" id="ramadan-label">رمضان ١٤٤٨</div>
+      <div class="label" id="ramadan-label">رمضان 1448</div>
       <div class="big"><span class="num" id="ramadan-days">—</span></div>
       <div class="sub" id="ramadan-sub">—</div>
     </div>
@@ -319,20 +362,18 @@
 <script>
 // daily background: one photo per Riyadh day, deterministic
 const BGS = [
-  {u:"https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/backgrounds/9hWJs7iblh8.jpg", c:"NEOM · Unsplash", d:0.9},
-  {u:"https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/backgrounds/XDtzu1D2P8c.jpg", c:"NEOM · Unsplash", d:0.84},
-  {u:"https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/backgrounds/t3dlLOhdEzs.jpg", c:"NEOM · Unsplash", d:0.99},
-  {u:"https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/backgrounds/LAj90eAXOZA.jpg", c:"NEOM · Unsplash", d:0.96},
-  {u:"https://raw.githubusercontent.com/tshi-dev/UrTV/master/assets/backgrounds/f5ZB0LHwi0s.jpg", c:"Hala AlGhanim · Unsplash", d:0.88}
+  {f:"_Fmibx42BVU.jpg", u:"https://raw.githubusercontent.com/nawafa91/urtv/6774794aa0a6fe09d1af5433119b5029d720ff43/assets/screensaver/_Fmibx42BVU.jpg", c:"YUNUS A KHALIFAH · Unsplash", d:0.92},
+  {f:"LAj90eAXOZA.jpg", u:"https://raw.githubusercontent.com/nawafa91/urtv/6774794aa0a6fe09d1af5433119b5029d720ff43/assets/screensaver/LAj90eAXOZA.jpg", c:"NEOM · Unsplash", d:0.96},
+  {f:"t3dlLOhdEzs.jpg", u:"https://raw.githubusercontent.com/nawafa91/urtv/6774794aa0a6fe09d1af5433119b5029d720ff43/assets/screensaver/t3dlLOhdEzs.jpg", c:"NEOM · Unsplash", d:0.94}
 ];
 // the app passes the chosen city in the URL fragment: #city=..&lat=..&lon=..&tz=..
 const _Q = new URLSearchParams((location.hash || '').replace(/^#/, ''));
 const _list = k => (_Q.get(k) || '').split(',').map(x=>x.trim()).filter(Boolean);
 const _num = (k, d) => { const v = parseFloat(_Q.get(k)); return isNaN(v) ? d : v; };
 const CONFIG = {
-  city: _Q.get('city') || 'الرياض',
-  latitude: _num('lat', 24.7136),
-  longitude: _num('lon', 46.6753),
+  city: _Q.get('city') || 'ينبع الصناعية',
+  latitude: _num('lat', 23.99),
+  longitude: _num('lon', 38.23),
   timezone: _Q.get('tz') || 'Asia/Riyadh',
   prayerMethod: 4,
   // followed teams in priority order: #teams=id,id,... (up to 10); older builds send team1/team2
@@ -358,12 +399,19 @@ const CONFIG = {
   weekWindowDays: 7,
   // #widget=1: only the card, on a transparent page (the launcher's home screen shows it)
   widget: _Q.get('widget') === '1',
+  backgrounds: _Q.get('backgrounds') === 'all' ? 'all' : 'calm',
+  reminders: _Q.get('reminders') !== '0',
 };
 
-const GREG = 'ar-SA-u-ca-gregory-nu-arab';
+// Retire the shows card only on the screensaver, including links saved by older apps.
+if(!CONFIG.widget && CONFIG.panel === 'shows') CONFIG.panel = 'none';
+
+// The launcher widget retains its existing typography.
+const GREG = 'ar-SA-u-ca-gregory-nu-' + (CONFIG.widget ? 'arab' : 'latn');
 const AR = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-const ar = s => String(s).replace(/[0-9]/g, d => AR[+d]);
-const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const western = s => String(s).replace(/[٠-٩]/g, d => String(AR.indexOf(d)));
+const ar = s => CONFIG.widget ? western(s).replace(/[0-9]/g, d => AR[+d]) : western(s);
+const esc = s => (CONFIG.widget ? String(s) : western(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad = n => String(n).padStart(2,'0');
 
 function riyadhParts(d = new Date()){
@@ -395,7 +443,7 @@ function tickClock(){
 function tickDates(){
   const now = new Date();
   try{
-    let h = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{
+    let h = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{
       timeZone: CONFIG.timezone, weekday:'long', day:'numeric', month:'long', year:'numeric'
     }).format(now);
     h = h.replace(/\s*هـ\s*$/,'').replace(/،\s*$/,'');
@@ -413,19 +461,25 @@ const PRAYER_NAMES = {Fajr:'الفجر',Dhuhr:'الظهر',Asr:'العصر',Magh
 let PRAYERS = [];
 
 let DAY_TIMES = null;
+let PRAYER_SOURCE = 'حساب محلي تقديري';
+let PRAYER_DAY = '';
+function prayerDayKey(date = new Date()){
+  const p = riyadhParts(date); return `${p.y}-${p.mo}-${p.d}`;
+}
 function buildPrayers(t){
-  DAY_TIMES = t;
-  PRAYERS = PRAYER_KEYS.map(k=>{
-    const [h,mi] = String(t[k]).split(':').map(Number);
-    return {key:k, name:PRAYER_NAMES[k], h, mi};
+  const prayers = PRAYER_KEYS.map(key => {
+    const match = /^([01]\d|2[0-3]):([0-5]\d)(?:\s|$)/.exec(String(t[key] || ''));
+    if(!match) throw new Error('Invalid prayer timings');
+    return {key, name:PRAYER_NAMES[key], h:+match[1], mi:+match[2]};
   });
+  DAY_TIMES = t; PRAYERS = prayers; PRAYER_DAY = prayerDayKey();
 }
 
 // Umm al-Qura: Fajr at 18.5°, Maghrib at sunset, Isha 90 min after Maghrib (120 in Ramadan),
-// Asr at shadow factor 1. Same method as Aladhan's method 4, so the offline times match to a minute or two.
-function computePrayers(){
-  const p = riyadhParts(), lat = CONFIG.latitude, lng = CONFIG.longitude;
-  const tz = Math.round((Date.UTC(p.y,p.mo-1,p.d,p.h,p.mi,p.s) - Date.now()) / 60000) / 60;
+// Asr at shadow factor 1 (standard school). Local astronomical estimates are not an official timetable.
+function computePrayers(date = new Date()){
+  const p = riyadhParts(date), lat = CONFIG.latitude, lng = CONFIG.longitude;
+  const tz = Math.round((Date.UTC(p.y,p.mo-1,p.d,p.h,p.mi,p.s) - date.getTime()) / 60000) / 60;
   const rad = d => d*Math.PI/180, deg = r => r*180/Math.PI;
   const fix = (a,b) => { a = a - b*Math.floor(a/b); return a < 0 ? a + b : a; };
   const jd0 = Date.UTC(p.y,p.mo-1,p.d)/86400000 + 2440587.5 - lng/(15*24);
@@ -453,21 +507,30 @@ function computePrayers(){
   const fajr = adj(angleTime(18.5, 5, true)), dhuhr = adj(noon(12)), asr = adj(asrTime(13));
   const sunrise = adj(angleTime(.833, 6, true));
   const maghrib = adj(angleTime(.833, 18, false));
-  const isha = maghrib + (hijriMonthNow() === 9 ? 120 : 90)/60;
+  const isha = maghrib + (hijriMonthNow(date) === 9 ? 120 : 90)/60;
   const hm = h => { const m = Math.round(fix(h, 24)*60) % 1440; return pad(Math.floor(m/60)) + ':' + pad(m%60); };
   return {Fajr:hm(fajr), Sunrise:hm(sunrise), Dhuhr:hm(dhuhr), Asr:hm(asr), Maghrib:hm(maghrib), Isha:hm(isha)};
 }
 
 async function loadPrayers(){
+  const requestedDay = prayerDayKey();
+  buildPrayers(computePrayers()); PRAYER_SOURCE = 'حساب محلي تقديري';
+  tickPrayer(); tickRamadan();
   const p = riyadhParts();
   const url = `https://api.aladhan.com/v1/timings/${pad(p.d)}-${pad(p.mo)}-${p.y}`
             + `?latitude=${CONFIG.latitude}&longitude=${CONFIG.longitude}`
-            + `&method=${CONFIG.prayerMethod}&timezonestring=${encodeURIComponent(CONFIG.timezone)}`;
+            + `&method=${CONFIG.prayerMethod}&school=0&timezonestring=${encodeURIComponent(CONFIG.timezone)}`;
   try{
     const r = await fetchT(url, 12000);
     const j = await r.json();
-    if(!j?.data?.timings?.Fajr) throw 0;
-    buildPrayers(j.data.timings);
+    if(prayerDayKey() !== requestedDay) return; // never apply yesterday's response after midnight
+    const meta = j?.data?.meta;
+    if(!r.ok || !meta || +meta.method?.id !== CONFIG.prayerMethod || meta.timezone !== CONFIG.timezone
+      || (meta.school && meta.school !== 'STANDARD')) throw 0;
+    const minutes = s => String(s).slice(0,5).split(':').map(Number).reduce((h,m) => h*60+m);
+    const interval = (minutes(j.data.timings.Isha) - minutes(j.data.timings.Maghrib) + 1440) % 1440;
+    if(!Number.isFinite(interval) || Math.abs(interval - (hijriMonthNow() === 9 ? 120 : 90)) > 1) throw 0;
+    buildPrayers(j.data.timings); PRAYER_SOURCE = 'Aladhan · أم القرى';
   }catch(e){
     try{ buildPrayers(computePrayers()); }catch(_){}
   }
@@ -512,7 +575,11 @@ function tickPrayer(){
         elT=document.getElementById('prayer-time'),
         elC=document.getElementById('prayer-count'),
         panel=document.querySelector('.p-prayer');
+  if(PRAYER_DAY && PRAYER_DAY !== prayerDayKey()){
+    buildPrayers(computePrayers()); PRAYER_SOURCE = 'حساب محلي تقديري';
+  }
   if(!PRAYERS.length) return;
+  renderPrayerSchedule();
   const p = riyadhParts();
   const mins = p.h*60 + p.mi + p.s/60;
 
@@ -534,13 +601,36 @@ function tickPrayer(){
 
   panel.classList.remove('now');
   elL.textContent = 'الصلاة القادمة';
-  let next = PRAYERS.find(x => (x.h*60+x.mi) > mins);
-  const leftM = next ? (next.h*60 + next.mi) - mins
-                     : (PRAYERS[0].h*60 + PRAYERS[0].mi) + 1440 - mins;
-  if(!next) next = PRAYERS[0];
+  const info = nextPrayerInfo(), next = info.prayer, leftM = info.seconds / 60;
   elN.textContent = prayerName(next);
   elT.textContent = fmt12(next.h, next.mi);
   elC.innerHTML = 'بعد <b>' + humanRemaining(Math.max(0, Math.round(leftM*60))) + '</b>';
+}
+
+let TOMORROW_PRAYER_CACHE = null;
+function nextPrayerInfo(now = new Date()){
+  const p = riyadhParts(now), mins = p.h * 60 + p.mi + p.s / 60;
+  const next = PRAYERS.find(x => x.h * 60 + x.mi > mins);
+  if(next) return {prayer:next, seconds:Math.max(0, Math.round((next.h * 60 + next.mi - mins) * 60)), tomorrow:false};
+  const tomorrow = new Date(now.getTime() + 86400000), key = prayerDayKey(tomorrow);
+  if(!TOMORROW_PRAYER_CACHE || TOMORROW_PRAYER_CACHE.key !== key){
+    TOMORROW_PRAYER_CACHE = {key, fajr:computePrayers(tomorrow).Fajr};
+  }
+  const [h, mi] = TOMORROW_PRAYER_CACHE.fajr.split(':').map(Number);
+  return {prayer:{key:'Fajr',name:PRAYER_NAMES.Fajr,h,mi},
+    seconds:Math.round((1440 + h * 60 + mi - mins) * 60), tomorrow:true};
+}
+function renderPrayerSchedule(){
+  if(CONFIG.widget) return;
+  const list = document.getElementById('prayer-schedule');
+  if(!list || !PRAYERS.length) return;
+  const info = nextPrayerInfo(), next = info.prayer;
+  list.innerHTML = PRAYERS.map(p => `<li class="${p.key === next.key ? 'next' : ''}" ${p.key === next.key ? 'aria-current="true"' : ''}><span>${esc(p.name)}</span><span class="prayer-at">${fmt12(p.h,p.mi)}</span></li>`).join('');
+  document.getElementById('schedule-heading').textContent = 'مواقيت اليوم · ' + CONFIG.city;
+  document.getElementById('schedule-countdown').textContent = 'القادمة: ' + next.name + (info.tomorrow ? ' غدًا' : '')
+    + ' · ' + fmt12(next.h,next.mi) + ' · بعد ' + humanRemaining(info.seconds);
+  document.getElementById('prayer-method').textContent = PRAYER_SOURCE + ' · ' + CONFIG.timezone + ' · أم القرى: الفجر 18.5°، العشاء بعد المغرب 90 دقيقة (120 في رمضان)، العصر: ظل واحد'
+    + (info.tomorrow ? ' · فجر الغد محسوب محليًا' : '');
 }
 
 let RAM_CACHE = {day:'', val:null};
@@ -568,10 +658,10 @@ function hijriYearNow(){
       .format(new Date()).replace(/[^0-9]/g,'');
   }catch(e){ return 1448; }
 }
-function hijriMonthNow(){
+function hijriMonthNow(date = new Date()){
   try{
     return +new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{timeZone:CONFIG.timezone,month:'numeric'})
-      .format(new Date()).replace(/[^0-9]/g,'');
+      .format(date).replace(/[^0-9]/g,'');
   }catch(e){ return 0; }
 }
 function tickRamadan(){
@@ -977,6 +1067,7 @@ const PANEL_TITLE = {shows:'هذا الأسبوع', prayers:'مواقيت الي
 function renderPanel(animate){
   const ul = document.getElementById('week-list'), hd = document.getElementById('week-hd');
   const P = CONFIG.panel;
+  if(P === 'none') return;
   if(P === 'shows'){ renderWeekPage(animate); return; }
   let rows = [];
   if(P === 'prayers') rows = prayerRows();
@@ -1066,6 +1157,33 @@ function quoteOfDay(){
   return {title:'حديث اليوم', rows:[`<li class="quote hadith">${body}</li>`, `<li class="src">${esc(h.source)}</li>`]};
 }
 
+// Complete, build-time verified source records. No runtime text generation or religious API requests.
+const REMINDERS = {"verses": [{"id": "13:28", "text": "ٱلَّذِينَ ءَامَنُواْ وَتَطۡمَئِنُّ قُلُوبُهُم بِذِكۡرِ ٱللَّهِۗ أَلَا بِذِكۡرِ ٱللَّهِ تَطۡمَئِنُّ ٱلۡقُلُوبُ", "surah": "الرعد", "ayah": 28}, {"id": "2:152", "text": "فَٱذۡكُرُونِيٓ أَذۡكُرۡكُمۡ وَٱشۡكُرُواْ لِي وَلَا تَكۡفُرُونِ", "surah": "البقرة", "ayah": 152}, {"id": "2:153", "text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ ٱسۡتَعِينُواْ بِٱلصَّبۡرِ وَٱلصَّلَوٰةِۚ إِنَّ ٱللَّهَ مَعَ ٱلصَّـٰبِرِينَ", "surah": "البقرة", "ayah": 153}, {"id": "3:8", "text": "رَبَّنَا لَا تُزِغۡ قُلُوبَنَا بَعۡدَ إِذۡ هَدَيۡتَنَا وَهَبۡ لَنَا مِن لَّدُنكَ رَحۡمَةًۚ إِنَّكَ أَنتَ ٱلۡوَهَّابُ", "surah": "آل عمران", "ayah": 8}, {"id": "2:201", "text": "وَمِنۡهُم مَّن يَقُولُ رَبَّنَآ ءَاتِنَا فِي ٱلدُّنۡيَا حَسَنَةٗ وَفِي ٱلۡأٓخِرَةِ حَسَنَةٗ وَقِنَا عَذَابَ ٱلنَّارِ", "surah": "البقرة", "ayah": 201}, {"id": "39:53", "text": "۞قُلۡ يَٰعِبَادِيَ ٱلَّذِينَ أَسۡرَفُواْ عَلَىٰٓ أَنفُسِهِمۡ لَا تَقۡنَطُواْ مِن رَّحۡمَةِ ٱللَّهِۚ إِنَّ ٱللَّهَ يَغۡفِرُ ٱلذُّنُوبَ جَمِيعًاۚ إِنَّهُۥ هُوَ ٱلۡغَفُورُ ٱلرَّحِيمُ", "surah": "الزمر", "ayah": 53}, {"id": "14:7", "text": "وَإِذۡ تَأَذَّنَ رَبُّكُمۡ لَئِن شَكَرۡتُمۡ لَأَزِيدَنَّكُمۡۖ وَلَئِن كَفَرۡتُمۡ إِنَّ عَذَابِي لَشَدِيدٞ", "surah": "ابراهيم", "ayah": 7}, {"id": "16:128", "text": "إِنَّ ٱللَّهَ مَعَ ٱلَّذِينَ ٱتَّقَواْ وَّٱلَّذِينَ هُم مُّحۡسِنُونَ", "surah": "النحل", "ayah": 128}, {"id": "20:114", "text": "فَتَعَٰلَى ٱللَّهُ ٱلۡمَلِكُ ٱلۡحَقُّۗ وَلَا تَعۡجَلۡ بِٱلۡقُرۡءَانِ مِن قَبۡلِ أَن يُقۡضَىٰٓ إِلَيۡكَ وَحۡيُهُۥۖ وَقُل رَّبِّ زِدۡنِي عِلۡمٗا", "surah": "طه", "ayah": 114}, {"id": "33:41", "text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ ٱذۡكُرُواْ ٱللَّهَ ذِكۡرٗا كَثِيرٗا", "surah": "الأحزاب", "ayah": 41}, {"id": "40:44", "text": "فَسَتَذۡكُرُونَ مَآ أَقُولُ لَكُمۡۚ وَأُفَوِّضُ أَمۡرِيٓ إِلَى ٱللَّهِۚ إِنَّ ٱللَّهَ بَصِيرُۢ بِٱلۡعِبَادِ", "surah": "غافر", "ayah": 44}, {"id": "94:6", "text": "إِنَّ مَعَ ٱلۡعُسۡرِ يُسۡرٗا", "surah": "الشرح", "ayah": 6}], "hadiths": [{"id": "69", "text": "حَدَّثَنَا مُحَمَّدُ بْنُ بَشَّارٍ، قَالَ حَدَّثَنَا يَحْيَى بْنُ سَعِيدٍ، قَالَ حَدَّثَنَا شُعْبَةُ، قَالَ حَدَّثَنِي أَبُو التَّيَّاحِ، عَنْ أَنَسٍ، عَنِ النَّبِيِّ صلى الله عليه وسلم قَالَ ‏ \"‏ يَسِّرُوا وَلاَ تُعَسِّرُوا، وَبَشِّرُوا وَلاَ تُنَفِّرُوا ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 69}, {"id": "645", "text": "حَدَّثَنَا عَبْدُ اللَّهِ بْنُ يُوسُفَ، قَالَ أَخْبَرَنَا مَالِكٌ، عَنْ نَافِعٍ، عَنْ عَبْدِ اللَّهِ بْنِ عُمَرَ، أَنَّ رَسُولَ اللَّهِ صلى الله عليه وسلم قَالَ ‏ \"‏ صَلاَةُ الْجَمَاعَةِ تَفْضُلُ صَلاَةَ الْفَذِّ بِسَبْعٍ وَعِشْرِينَ دَرَجَةً ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 645}, {"id": "1898", "text": "حَدَّثَنَا قُتَيْبَةُ، حَدَّثَنَا إِسْمَاعِيلُ بْنُ جَعْفَرٍ، عَنْ أَبِي سُهَيْلٍ، عَنْ أَبِيهِ، عَنْ أَبِي هُرَيْرَةَ ـ رضى الله عنه ـ أَنَّ رَسُولَ اللَّهِ صلى الله عليه وسلم قَالَ ‏ \"‏ إِذَا جَاءَ رَمَضَانُ فُتِحَتْ أَبْوَابُ الْجَنَّةِ ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 1898}, {"id": "1923", "text": "حَدَّثَنَا آدَمُ بْنُ أَبِي إِيَاسٍ، حَدَّثَنَا شُعْبَةُ، حَدَّثَنَا عَبْدُ الْعَزِيزِ بْنُ صُهَيْبٍ، قَالَ سَمِعْتُ أَنَسَ بْنَ مَالِكٍ ـ رضى الله عنه ـ قَالَ قَالَ النَّبِيُّ صلى الله عليه وسلم ‏ \"‏ تَسَحَّرُوا فَإِنَّ فِي السَّحُورِ بَرَكَةً ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 1923}, {"id": "1957", "text": "حَدَّثَنَا عَبْدُ اللَّهِ بْنُ يُوسُفَ، أَخْبَرَنَا مَالِكٌ، عَنْ أَبِي حَازِمٍ، عَنْ سَهْلِ بْنِ سَعْدٍ، أَنَّ رَسُولَ اللَّهِ صلى الله عليه وسلم قَالَ ‏ \"‏ لاَ يَزَالُ النَّاسُ بِخَيْرٍ مَا عَجَّلُوا الْفِطْرَ ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 1957}, {"id": "2446", "text": "حَدَّثَنَا مُحَمَّدُ بْنُ الْعَلاَءِ، حَدَّثَنَا أَبُو أُسَامَةَ، عَنْ بُرَيْدٍ، عَنْ أَبِي بُرْدَةَ، عَنْ أَبِي مُوسَى ـ رضى الله عنه ـ عَنِ النَّبِيِّ صلى الله عليه وسلم قَالَ ‏ \"‏ الْمُؤْمِنُ لِلْمُؤْمِنِ كَالْبُنْيَانِ يَشُدُّ بَعْضُهُ بَعْضًا ‏\"‏‏.‏ وَشَبَّكَ بَيْنَ أَصَابِعِهِ‏.‏", "book": "صحيح البخاري", "number": 2446}, {"id": "2457", "text": "حَدَّثَنَا أَبُو عَاصِمٍ، عَنِ ابْنِ جُرَيْجٍ، عَنِ ابْنِ أَبِي مُلَيْكَةَ، عَنْ عَائِشَةَ ـ رضى الله عنها ـ عَنِ النَّبِيِّ صلى الله عليه وسلم قَالَ ‏ \"‏ إِنَّ أَبْغَضَ الرِّجَالِ إِلَى اللَّهِ الأَلَدُّ الْخَصِمُ ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 2457}, {"id": "3250", "text": "حَدَّثَنَا عَلِيُّ بْنُ عَبْدِ اللَّهِ، حَدَّثَنَا سُفْيَانُ، عَنْ أَبِي حَازِمٍ، عَنْ سَهْلِ بْنِ سَعْدٍ السَّاعِدِيِّ، قَالَ قَالَ رَسُولُ اللَّهِ صلى الله عليه وسلم ‏ \"‏ مَوْضِعُ سَوْطٍ فِي الْجَنَّةِ خَيْرٌ مِنَ الدُّنْيَا وَمَا فِيهَا ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 3250}, {"id": "4522", "text": "حَدَّثَنَا أَبُو مَعْمَرٍ، حَدَّثَنَا عَبْدُ الْوَارِثِ، عَنْ عَبْدِ الْعَزِيزِ، عَنْ أَنَسٍ، قَالَ كَانَ النَّبِيُّ صلى الله عليه وسلم يَقُولُ ‏ \"‏ اللَّهُمَّ رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 4522}, {"id": "5033", "text": "حَدَّثَنَا مُحَمَّدُ بْنُ الْعَلاَءِ، حَدَّثَنَا أَبُو أُسَامَةَ، عَنْ بُرَيْدٍ، عَنْ أَبِي بُرْدَةَ، عَنْ أَبِي مُوسَى، عَنِ النَّبِيِّ صلى الله عليه وسلم قَالَ ‏ \"‏ تَعَاهَدُوا الْقُرْآنَ فَوَالَّذِي نَفْسِي بِيَدِهِ لَهُوَ أَشَدُّ تَفَصِّيًا مِنَ الإِبِلِ فِي عُقُلِهَا ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 5033}, {"id": "5304", "text": "حَدَّثَنَا عَمْرُو بْنُ زُرَارَةَ، أَخْبَرَنَا عَبْدُ الْعَزِيزِ بْنُ أَبِي حَازِمٍ، عَنْ أَبِيهِ، عَنْ سَهْلٍ، قَالَ رَسُولُ اللَّهِ صلى الله عليه وسلم ‏ \"‏ أَنَا وَكَافِلُ الْيَتِيمِ فِي الْجَنَّةِ هَكَذَا ‏\"‏‏.‏ وَأَشَارَ بِالسَّبَّابَةِ وَالْوُسْطَى، وَفَرَّجَ بَيْنَهُمَا شَيْئًا‏.‏", "book": "صحيح البخاري", "number": 5304}, {"id": "5352", "text": "حَدَّثَنَا إِسْمَاعِيلُ، قَالَ حَدَّثَنِي مَالِكٌ، عَنْ أَبِي الزِّنَادِ، عَنِ الأَعْرَجِ، عَنْ أَبِي هُرَيْرَةَ ـ رضى الله عنه ـ أَنَّ رَسُولَ اللَّهِ صلى الله عليه وسلم قَالَ ‏ \"‏ قَالَ اللَّهُ أَنْفِقْ يَا ابْنَ آدَمَ أُنْفِقْ عَلَيْكَ ‏\"‏‏.‏", "book": "صحيح البخاري", "number": 5352}]};
+const REMINDER_INTERVAL_MS = 5 * 60 * 1000;
+let LAST_REMINDER_SLOT = null;
+function reminderForSlot(slot){
+  const type = slot % 2 === 0 ? 'verse' : 'hadith';
+  const pool = type === 'verse' ? REMINDERS.verses : REMINDERS.hadiths;
+  if(!pool.length) return null;
+  return {type, record:pool[Math.floor(slot / 2) % pool.length]};
+}
+function renderReminder(){
+  if(CONFIG.widget) return;
+  const card = document.getElementById('reminder-card');
+  if(!CONFIG.reminders){card.hidden = true; document.documentElement.classList.remove('has-reminders'); LAST_REMINDER_SLOT = null; return;}
+  const slot = Math.floor(Date.now() / REMINDER_INTERVAL_MS);
+  if(slot === LAST_REMINDER_SLOT) return;
+  const item = reminderForSlot(slot);
+  if(!item){card.hidden = true;return;}
+  const r = item.record;
+  // textContent retains the full source text, including the full isnad for each hadith.
+  document.getElementById('reminder-title').textContent = item.type === 'verse' ? 'آية قرآنية' : 'حديث نبوي صحيح';
+  document.getElementById('reminder-text').textContent = r.text;
+  document.getElementById('reminder-source').textContent = item.type === 'verse'
+    ? 'سورة ' + r.surah + ' · الآية ' + r.ayah : r.book + ' · حديث ' + r.number;
+  card.hidden = false; document.documentElement.classList.add('has-reminders'); LAST_REMINDER_SLOT = slot;
+}
+
 const WX_CODES = {
   0:'صافي',1:'صافي غالباً',2:'غائم جزئياً',3:'غائم',45:'ضباب',48:'ضباب متجمد',
   51:'رذاذ',53:'رذاذ',55:'رذاذ كثيف',56:'رذاذ متجمد',57:'رذاذ متجمد',
@@ -1133,7 +1251,7 @@ function pixelShift(){
 
 // Background photos: the hosted set in photos/ (photos/index.json in the repo). A hosted photo is used only
 // once it has loaded; offline, or if it fails, a bundled one is shown, so the screen is never empty.
-const PHOTO_BASE = 'https://raw.githubusercontent.com/tshi-dev/UrTV/master/photos/';
+const PHOTO_BASE = 'https://raw.githubusercontent.com/nawafa91/urtv/6774794aa0a6fe09d1af5433119b5029d720ff43/photos/';
 let REMOTE_BGS = (()=>{ try{ return JSON.parse(localStorage.getItem('photoIndex') || '[]'); }catch(e){ return []; } })();
 
 async function loadPhotoIndex(){
@@ -1196,7 +1314,8 @@ function applyBackground(force){
     const slot = riyadhDayNumber() * 48 + Math.floor((p.h * 60 + p.mi) / PHOTO_SLOT_MIN);
     if(slot === BG_SLOT && !force) return;
     BG_SLOT = slot;
-    const set = REMOTE_BGS.length ? photoSet(REMOTE_BGS.length).map(k => REMOTE_BGS[k]) : [];
+    const pool = CONFIG.backgrounds === 'all' ? REMOTE_BGS : REMOTE_BGS.filter(x => BGS.some(b => b.f === x.f));
+    const set = pool.length ? photoSet(pool.length).map(k => pool[k]) : [];
     const local = BGS[slot % BGS.length];
     if(!set.length){ showBackground(local.u, local); return; }
     const b = set[slot % set.length], url = PHOTO_BASE + b.f;
@@ -1215,7 +1334,7 @@ function applyBackground(force){
 }
 
 // Last painted panels, shown at once on the next start while fresh data loads.
-const SNAP_KEY = 'snap2:' + location.hash;   // bump when the panels' markup changes
+const SNAP_KEY = (CONFIG.widget ? 'snap2:' : 'snap3:') + location.hash;   // bump when the panels' markup changes
 const SNAP_SEL = ['.markets', '#week-list', '#match-row'];
 function saveSnap(){
   try{ localStorage.setItem(SNAP_KEY, JSON.stringify(SNAP_SEL.map(q => (document.querySelector(q)||{}).innerHTML || ''))); }catch(e){}
@@ -1229,7 +1348,13 @@ function restoreSnap(){
 
 function boot(){
   if(CONFIG.widget){ bootWidget(); return; }
+  if(CONFIG.panel === 'none'){
+    document.querySelector('.week').remove();
+    document.querySelector('.mid').classList.add('no-card');
+  }
   restoreSnap();
+  renderReminder();
+  setInterval(renderReminder, 1000); // slot-based catch-up after sleep and every five-minute boundary
   setTimeout(saveSnap, 15*1000);   // the dream can be killed before pagehide
   setInterval(saveSnap, 60*1000);
   addEventListener('pagehide', saveSnap);
@@ -1243,8 +1368,7 @@ function boot(){
   setInterval(() => applyBackground(false), 60*1000);
   tickClock(); tickDates(); tickRamadan();
   TICKERS.forEach(loadTicker);
-  if(CONFIG.panel === 'none') document.querySelector('.week').style.display = 'none';
-  else if(CONFIG.panel !== 'shows') renderPanel(false);   // its own data arrives with prayers, weather, matches
+  if(CONFIG.panel !== 'none' && CONFIG.panel !== 'shows') renderPanel(false);   // its own data arrives with prayers, weather, matches
   loadPrayers(); loadMatches(); if(CONFIG.panel === 'shows') loadWeek(); loadWeather();
   applyNight(); pixelShift();
 
@@ -1301,6 +1425,7 @@ document.addEventListener('keydown', e=>{
 });
 
 boot();
+window.URTV_READY = true;
 </script>
 </body>
 </html>

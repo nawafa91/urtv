@@ -87,6 +87,16 @@ public class SettingsActivity extends Activity {
         header("الموقع");
         row("المدينة", prefs.city()[0], R.drawable.ic_place, new Runnable() { public void run() { pickCity(); } });
 
+        row("الخلفيات", "all".equals(prefs.backgrounds()) ? "كل الصور" : "طبيعة هادئة", R.drawable.ic_eye,
+            () -> new AlertDialog.Builder(this, DIALOG_THEME).setTitle("الخلفيات")
+                .setSingleChoiceItems(new String[] {"طبيعة هادئة", "كل الصور"},
+                    "all".equals(prefs.backgrounds()) ? 1 : 0, (d, i) -> {
+                        prefs.setBackgrounds(i == 1 ? "all" : "calm"); d.dismiss(); render();
+                    }).show());
+
+        row("الآيات والأحاديث أسفل الساعة", prefs.reminders() ? "تعمل · تتغير كل 5 دقائق" : "متوقفة", R.drawable.ic_eye,
+            () -> { prefs.setReminders(!prefs.reminders()); render(); });
+
         header("المباريات");
         row("الفرق المتابعة (" + arabicNum(prefs.teams().size()) + "/" + arabicNum(Prefs.MAX_TEAMS) + ")", teamsLabel(),
             R.drawable.ic_trophy, new Runnable() { public void run() { manageTeams(); } });
@@ -330,16 +340,20 @@ public class SettingsActivity extends Activity {
 
     /** The card beside the screensaver's clock, or (home) the one on the launcher's home screen. */
     private void pickPanel(final boolean home) {
-        String[] labels = new String[Prefs.PANELS.length];
+        List<String[]> choices = new ArrayList<>();
+        for (String[] option : Prefs.PANELS) {
+            if (home || !"shows".equals(option[0])) choices.add(option);
+        }
+        String[] labels = new String[choices.size()];
         String current = home ? prefs.homePanel() : prefs.panel();
         int sel = 0;
         for (int i = 0; i < labels.length; i++) {
-            labels[i] = Prefs.PANELS[i][1];
-            if (Prefs.PANELS[i][0].equals(current)) sel = i;
+            labels[i] = choices.get(i)[1];
+            if (choices.get(i)[0].equals(current)) sel = i;
         }
         new AlertDialog.Builder(this, DIALOG_THEME).setTitle(home ? "بطاقة على الشاشة الرئيسية" : "بجانب الساعة")
             .setSingleChoiceItems(labels, sel, (d, i) -> {
-                if (home) prefs.setHomePanel(Prefs.PANELS[i][0]); else prefs.setPanel(Prefs.PANELS[i][0]);
+                if (home) prefs.setHomePanel(choices.get(i)[0]); else prefs.setPanel(choices.get(i)[0]);
                 d.dismiss();
                 render();
             })
@@ -400,11 +414,7 @@ public class SettingsActivity extends Activity {
         return names.isEmpty() ? "لا شيء" : Prefs.join(names, "، ");
     }
 
-    private static String arabicNum(int n) {
-        StringBuilder b = new StringBuilder();
-        for (char c : String.valueOf(n).toCharArray()) b.append((char) ('٠' + (c - '0')));
-        return b.toString();
-    }
+    private static String arabicNum(int n) { return String.valueOf(n); }
 
     private String showsLabel() {
         List<String> v = prefs.shows();

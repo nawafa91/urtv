@@ -16,6 +16,7 @@ reopened, and an interrupted upload resumes where it stopped.
 import base64
 import hashlib
 import os
+import shlex
 import sys
 import time
 from pathlib import Path
@@ -78,6 +79,17 @@ class TV:
 
     def shell(self, cmd, timeout=120):
         return self.call("shell", cmd, read_timeout_s=timeout) or ""
+
+    def checked(self, cmd):
+        """Missing exit marker (e.g. disconnect) fails closed; commands must be idempotent."""
+        script = 'sh -c ' + shlex.quote(cmd) + '; rc=$?; printf "\\n__URTV_RC__%s\\n" "$rc"'
+        out = self.shell(script)
+        body, sep, status = out.rpartition('\n__URTV_RC__')
+        if not sep or not status.strip().isdigit():
+            raise RuntimeError('Missing remote exit status; refusing to continue.')
+        if int(status.strip()) != 0:
+            raise RuntimeError(f'Remote command failed ({status.strip()}): {body.strip()}')
+        return body.rstrip()
 
 
 def push_b64(tv, local, remote, chunk=96_000):   # one argument may not exceed 128 KB on Android
@@ -154,6 +166,11 @@ def main():
         for p in ("ro.product.manufacturer", "ro.product.brand", "ro.product.model", "ro.product.device",
                   "ro.build.version.release", "ro.build.version.sdk", "ro.build.display.id"):
             print(f"{p} = {tv.shell(f'getprop {p}').strip()}")
+    elif a[0] == "--checked":
+        try:
+            print(tv.checked(a[1]))
+        except RuntimeError as e:
+            sys.exit(str(e))
     elif a[0] == "--batch":
         for line in sys.stdin:
             line = line.strip()

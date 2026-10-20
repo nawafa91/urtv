@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Disable every package in a debloat list (one pm call per shell command; chained pm calls can stop early).
-# Packages are disabled for user 0, never uninstalled. Undo with optimize/restore.sh <same list>.
+# Packages are disabled for user 0, never uninstalled. Home rollback does not undo debloat. Re-enable only reviewed packages from the saved pre-change state.
 # Refuses anything in optimize/lists/keep.txt.
 # Usage: optimize/disable.sh optimize/lists/tcl-safe.txt
 set -euo pipefail

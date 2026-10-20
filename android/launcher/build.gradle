@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
 }
 
+apply from: rootProject.file('independent.gradle')
+
 android {
     namespace 'sa.urtv.home'
     compileSdk 34
@@ -9,24 +11,15 @@ android {
     defaultConfig {
         applicationId 'sa.urtv.home'
         minSdk 26
-        targetSdk 30   // Android 11 TVs only show the Wi-Fi name to apps targeting 30 with location granted
-        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int)
-        versionName "1.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
-    }
-
-    signingConfigs {
-        release {
-            storeFile file('../tvsaver.keystore')
-            storePassword 'tvsaver'
-            keyAlias 'tvsaver'
-            keyPassword 'tvsaver'
-        }
+        targetSdk 34   // SSID may be redacted; the UI already has a generic connection-state fallback.
+        versionCode project.ext.urtvVersionCode
+        versionName "1.${project.ext.urtvVersionCode}"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.release
+            // Configured by independent.gradle only when all external signing inputs exist.
         }
     }
 
@@ -40,7 +33,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    lint { abortOnError false }
+    lint { abortOnError true }
 }
 
 def copyWallpapers = tasks.register('copyWallpapers', Copy) {

@@ -11,7 +11,7 @@ import urllib.request
 from pathlib import Path
 
 API = "https://www.wikidata.org/w/api.php"
-UA = {"User-Agent": "tv-screensaver club names (github.com/tshi-dev/UrTV)"}
+UA = {"User-Agent": "tv-screensaver club names (github.com/nawafa91/urtv)"}
 
 
 def get(params):

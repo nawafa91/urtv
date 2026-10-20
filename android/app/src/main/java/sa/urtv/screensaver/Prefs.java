@@ -65,9 +65,9 @@ final class Prefs {
 
     Prefs(Context c) { sp = c.getSharedPreferences("settings", Context.MODE_PRIVATE); }
 
-    /** {name, latitude, longitude}; Riyadh until the user picks */
+    /** Industrial Yanbu city centre, distinct from Yanbu al-Bahr; saved choices always win. */
     String[] city() {
-        return new String[] {sp.getString("cityName", "الرياض"), sp.getString("cityLat", "24.6877"), sp.getString("cityLon", "46.7219")};
+        return new String[] {sp.getString("cityName", "ينبع الصناعية"), sp.getString("cityLat", "23.99"), sp.getString("cityLon", "38.23")};
     }
     void setCity(String name, String lat, String lon) {
         sp.edit().putString("cityName", name).putString("cityLat", lat).putString("cityLon", lon).apply();
@@ -105,8 +105,11 @@ final class Prefs {
         {"matches", "مباريات فرقك القادمة"}, {"verse", "آية أو حديث اليوم"}, {"none", "لا شيء"},
     };
 
-    /** Older builds had an on/off switch for the shows card; off becomes "none". */
-    String panel() { return sp.getString("panel", sp.getBoolean("showWeek", true) ? "shows" : "none"); }
+    /** Retire the screensaver's shows card without deleting the saved preference. */
+    String panel() {
+        String v = sp.getString("panel", "none");
+        return "shows".equals(v) ? "none" : v;
+    }
     void setPanel(String v) { sp.edit().putString("panel", v).apply(); }
 
     static String panelLabel(String v) {
@@ -127,6 +130,12 @@ final class Prefs {
     String minRating() { return sp.getString("minRating", "7"); }
     void setMinRating(String v) { sp.edit().putString("minRating", v).apply(); }
 
+    boolean reminders() { return sp.getBoolean("reminders", true); }
+    void setReminders(boolean enabled) { sp.edit().putBoolean("reminders", enabled).apply(); }
+
+    String backgrounds() { return sp.getString("backgrounds", "calm"); }
+    void setBackgrounds(String v) { sp.edit().putString("backgrounds", v).apply(); }
+
     boolean autoUpdate() { return sp.getBoolean("autoUpdate", true); }
     void setAutoUpdate(boolean v) { sp.edit().putBoolean("autoUpdate", v).apply(); }
 
@@ -134,12 +143,9 @@ final class Prefs {
 
     /** The page reads its settings from the fragment; a ?query fails on file:// in WebView. */
     String dashboardUrl(Context c) {
-        File remote = Updater.pageFile(c);
-        // A downloaded page older than the installed app is stale: the APK carries a newer copy.
-        long installed = 0;
-        try { installed = c.getPackageManager().getPackageInfo(c.getPackageName(), 0).lastUpdateTime; }
-        catch (Exception ignored) { }
-        String base = autoUpdate() && remote.isFile() && remote.lastModified() > installed
+        // Legacy web/tv.html had no stable-release verification and is never selected again.
+        File remote = autoUpdate() ? Updater.select(c) : null;
+        String base = remote != null
             ? Uri.fromFile(remote).toString()
             : "file:///android_asset/tv.html";
         return base + "#" + fragment();
@@ -153,6 +159,8 @@ final class Prefs {
         return "city=" + Uri.encode(city[0]) + "&lat=" + city[1] + "&lon=" + city[2]
             + "&tz=" + Uri.encode(TZ)
             + "&teams=" + join(teamIds(), ",")
+            + "&reminders=" + (reminders() ? "1" : "0")
+            + "&backgrounds=" + backgrounds()
             + "&panel=" + panel()
             + "&week=" + ("none".equals(panel()) ? "0" : "1")   // for a page older than #panel
             + "&genres=" + Uri.encode(join(list("genres"), ","))

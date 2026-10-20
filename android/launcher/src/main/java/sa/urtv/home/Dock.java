@@ -42,7 +42,7 @@ final class Dock {
         Intent q = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
         for (ResolveInfo ri : pm.queryIntentActivities(q, 0)) {
             String p = ri.activityInfo.packageName;
-            if (!hidden.contains(p) && !out.containsKey(p)) out.put(p, String.valueOf(ri.loadLabel(pm)));
+            if (!hidden.contains(p) && !out.containsKey(p)) out.put(p, Digits.latin(ri.loadLabel(pm)));
         }
         return out;
     }

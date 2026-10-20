@@ -17,9 +17,13 @@ FONTS = {
     "__F_REGULAR__": "Thmanyah-Regular.woff2",
     "__F_MEDIUM__": "Thmanyah-Medium.woff2",
     "__F_DISPLAY__": "ThmanyahDisplay-Bold.woff2",
+    "__F_REMINDERS__": "NotoNaskhArabic-Reminders.woff2",
 }
 # tv.html points here for fonts and bundled photos; the app answers from its assets, a browser from GitHub.
-REPO = "https://raw.githubusercontent.com/tshi-dev/UrTV/master/"
+SOURCE = json.loads((ROOT / "config/repository.json").read_text(encoding="utf-8"))
+if not re.fullmatch(r'[a-f0-9]{40}', SOURCE['ref']):
+    raise ValueError('Content assets must use an immutable commit, never master or another moving branch.')
+REPO = f"https://raw.githubusercontent.com/{SOURCE['repository']}/{SOURCE['ref']}/"
 
 
 BASMALA = "بسم الله الرحمن الرحيم"   # compared without harakat: the API orders them its own way
@@ -175,6 +179,7 @@ def data_uri(path, mime):
 
 def main():
     html = (ROOT / "src/template.html").read_text(encoding="utf-8")
+    html = html.replace("__PHOTO_BASE__", REPO + "photos/")
     # 2 KB, so inlined in both pages
     html = html.replace("__F_MARKS__", data_uri(ROOT / "assets/fonts/NotoNaskhArabic-Marks.woff2", "font/woff2"))
     teams = json.loads((ROOT / "assets/shared/teams-ar.json").read_text(encoding="utf-8"))
@@ -182,7 +187,10 @@ def main():
     html = html.replace("__VERSES__", json.dumps(verses_for_screen(), ensure_ascii=False))
     html = html.replace("__HADITH__", json.dumps(hadith_for_screen(), ensure_ascii=False))   # checked by CI
 
-    bg_dir = ROOT / "assets/backgrounds"
+    reminders = json.loads((ROOT / "assets/shared/reminders.json").read_text(encoding="utf-8"))
+    html = html.replace("__REMINDERS__", json.dumps({k: reminders[k] for k in ("verses", "hadiths")}, ensure_ascii=False))
+
+    bg_dir = ROOT / "assets/screensaver"
     bgs = json.loads((bg_dir / "backgrounds.json").read_text(encoding="utf-8"))
     for name, inline in (("urtv.html", True), ("tv.html", False)):
         page = html
@@ -191,8 +199,8 @@ def main():
                                 else REPO + "assets/fonts/" + font)
         entries = []
         for bg in bgs:
-            u = data_uri(bg_dir / bg["file"], "image/jpeg") if inline else REPO + "assets/backgrounds/" + bg["file"]
-            entries.append(f'  {{u:"{u}", c:{json.dumps(bg["credit"], ensure_ascii=False)}, d:{bg["brightness"]}}}')
+            u = data_uri(bg_dir / bg["file"], "image/jpeg") if inline else REPO + "assets/screensaver/" + bg["file"]
+            entries.append(f'  {{f:{json.dumps(bg["file"])}, u:"{u}", c:{json.dumps(bg["credit"], ensure_ascii=False)}, d:{bg["brightness"]}}}')
         out = ROOT / "dist" / name
         out.parent.mkdir(exist_ok=True)
         out.write_text(page.replace("__BG_SET__", ",\n".join(entries)), encoding="utf-8")

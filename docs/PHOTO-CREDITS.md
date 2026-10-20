@@ -7,6 +7,14 @@ The photos are not credited on screen; they are credited here.
 Five of the hosted photos below, copied into `assets/backgrounds/`:
 `9hWJs7iblh8.jpg` `XDtzu1D2P8c.jpg` `t3dlLOhdEzs.jpg` `LAj90eAXOZA.jpg` `f5ZB0LHwi0s.jpg` 
 
+## Screensaver calm defaults
+
+`assets/screensaver/` contains unchanged copies of three photos already credited below:
+`_Fmibx42BVU.jpg` (YUNUS A KHALIFAH), `LAj90eAXOZA.jpg` and `t3dlLOhdEzs.jpg` (NEOM).
+The manifest `assets/screensaver/backgrounds.json` selects these quiet dune, coastline and mountain
+scenes. The original `assets/backgrounds/` set remains unchanged for the native launcher.
+Screensaver settings offer calm defaults or the full hosted set (`#backgrounds=all`).
+
 ## Hosted set (`photos/`)
 
 From [Unsplash](https://unsplash.com), under the [Unsplash License](https://unsplash.com/license).

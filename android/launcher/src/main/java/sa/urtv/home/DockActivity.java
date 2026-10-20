@@ -56,8 +56,8 @@ public class DockActivity extends Activity {
         frame.addView(col, new FrameLayout.LayoutParams(dp(600), -2, Gravity.CENTER_HORIZONTAL));
 
         col.addView(text("ترتيب المفضلة", 26, "Medium", TEXT), right(0));
-        col.addView(text("OK على تطبيق لتحريكه بالأسهم ▲▼ ثم OK لتثبيته. من " + ar(Dock.MIN) + " إلى "
-            + ar(Dock.MAX) + " تطبيقات.", 14, "Regular", DIM), right(dp(6)));
+        col.addView(text("OK على تطبيق لتحريكه بالأسهم ▲▼ ثم OK لتثبيته. من " + String.valueOf(Dock.MIN) + " إلى "
+            + Dock.MAX + " تطبيقات.", 14, "Regular", DIM), right(dp(6)));
         count = text("", 13, "Medium", GOLD);
         col.addView(count, right(dp(24)));
         list = new LinearLayout(this);
@@ -73,7 +73,7 @@ public class DockActivity extends Activity {
         list.removeAllViews();
         cards.clear();
         removes.clear();
-        count.setText("المفضلة · " + ar(row.size()) + " من " + ar(Dock.MAX));
+        count.setText("المفضلة · " + row.size() + " من " + Dock.MAX);
         for (int i = 0; i < row.size(); i++) list.addView(favouriteRow(i), rowParams());
 
         List<String> others = new ArrayList<>(apps.keySet());
@@ -116,7 +116,7 @@ public class DockActivity extends Activity {
         r.setOrientation(LinearLayout.HORIZONTAL);
         TextView remove = (TextView) pill("إزالة", v -> remove(i));
         r.addView(remove, new LinearLayout.LayoutParams(dp(84), -1));
-        View c = card(row.get(i), ar(i + 1), i == moving, v -> {
+        View c = card(row.get(i), String.valueOf(i + 1), i == moving, v -> {
             if (moving == i) drop(); else { moving = i; render(i); }
         });
         LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, -2, 1f);
@@ -198,14 +198,14 @@ public class DockActivity extends Activity {
     // ---------------------------------------------------------------- actions
 
     private void remove(int i) {
-        if (row.size() <= Dock.MIN) { toast("المفضلة لا تقل عن " + ar(Dock.MIN) + " تطبيقات"); return; }
+        if (row.size() <= Dock.MIN) { toast("المفضلة لا تقل عن " + String.valueOf(Dock.MIN) + " تطبيقات"); return; }
         row.remove(i);
         Dock.save(this, row);
         render(Math.min(i, row.size() - 1));
     }
 
     private void add(String pkg) {
-        if (row.size() >= Dock.MAX) { toast("المفضلة ممتلئة (" + ar(Dock.MAX) + ")"); return; }
+        if (row.size() >= Dock.MAX) { toast("المفضلة ممتلئة (" + Dock.MAX + ")"); return; }
         row.add(pkg);
         Dock.save(this, row);
         render(row.size() - 1);
@@ -244,7 +244,7 @@ public class DockActivity extends Activity {
 
     private TextView text(String s, float sp, String weight, int color) {
         TextView t = new TextView(this);
-        t.setText(s);
+        t.setText(Digits.latin(s));
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
         t.setTextColor(color);
         t.setGravity(Gravity.RIGHT);
@@ -269,9 +269,5 @@ public class DockActivity extends Activity {
 
     private int dp(float v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 
-    private static String ar(int n) {
-        StringBuilder b = new StringBuilder();
-        for (char ch : String.valueOf(n).toCharArray()) b.append((char) ('٠' + (ch - '0')));
-        return b.toString();
-    }
+
 }

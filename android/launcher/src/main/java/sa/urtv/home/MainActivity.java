@@ -60,7 +60,7 @@ import java.util.Set;
  * Plain framework views only (no AndroidX). Network only for hosted wallpapers and the optional card (HomeCard).
  *
  * Adapted from github.com/mihirgupta0900/tv-home (MIT, see android/launcher/LICENSE-tv-home):
- * Arabic text and digits, Hijri date, Thmanyah fonts, the screensaver's gold palette and Saudi photos,
+ * Arabic text, Western digits, Hijri date, Thmanyah fonts, the screensaver's gold palette and Saudi photos,
  * clock on the right, and a pill that opens the screensaver's settings.
  */
 public class MainActivity extends Activity {
@@ -139,8 +139,20 @@ public class MainActivity extends Activity {
         pf.addAction(Intent.ACTION_PACKAGE_REMOVED);
         pf.addAction(Intent.ACTION_PACKAGE_CHANGED);
         pf.addDataScheme("package");
-        registerReceiver(packages, pf);
-        registerReceiver(dockChanged, new IntentFilter(Dock.CHANGED));
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(packages, pf, Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(packages, pf);
+        }
+        registerDockReceiver();
+    }
+
+    // Lint also flags the legacy call despite the API guard. Android <33 has no export flag API.
+    @android.annotation.SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private void registerDockReceiver() {
+        if (android.os.Build.VERSION.SDK_INT >= 33)
+            registerReceiver(dockChanged, new IntentFilter(Dock.CHANGED), Context.RECEIVER_NOT_EXPORTED);
+        else registerReceiver(dockChanged, new IntentFilter(Dock.CHANGED));
     }
 
     @Override
@@ -150,7 +162,8 @@ public class MainActivity extends Activity {
         tf.addAction(Intent.ACTION_TIME_CHANGED);
         tf.addAction(Intent.ACTION_TIMEZONE_CHANGED);
         tf.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-        registerReceiver(tick, tf);
+        if (android.os.Build.VERSION.SDK_INT >= 33) registerReceiver(tick, tf, Context.RECEIVER_EXPORTED);
+        else registerReceiver(tick, tf);
         updateClock();
         updateWifi();
         homeCard.refresh();
@@ -337,7 +350,7 @@ public class MainActivity extends Activity {
     /** Pill button: label with a Material icon on its right (Arabic reading order), tinted with the text. */
     private TextView pill(String label, int icon) {
         TextView p = text(12, "sans-serif-medium", 0xE6FFFFFF);
-        p.setText(label);
+        p.setText(Digits.latin(label));
         p.setGravity(Gravity.CENTER);
         android.graphics.drawable.Drawable ic = getDrawable(icon).mutate();
         ic.setBounds(0, 0, dp(16), dp(16));
@@ -376,7 +389,7 @@ public class MainActivity extends Activity {
             if (hidden.contains(ai.packageName) || byPkg.containsKey(ai.packageName)) continue;
             App a = new App();
             a.pkg = ai.packageName;
-            a.label = String.valueOf(ri.loadLabel(pm));
+            a.label = Digits.latin(ri.loadLabel(pm));
             a.component = new ComponentName(ai.packageName, ai.name);
             Drawable banner = ai.loadBanner(pm);
             if (banner == null) banner = ai.applicationInfo.loadBanner(pm);
@@ -608,7 +621,7 @@ public class MainActivity extends Activity {
                 labels.add("إزالة من المفضلة");
                 actions.add(() -> { dock.remove(pkg); saveDock(dock, dock.get(Math.max(0, i - 1))); });
             } else {
-                labels.add("المفضلة لا تقل عن " + arabicDigits(String.valueOf(MIN_DOCK)));
+                labels.add("المفضلة لا تقل عن " + Digits.latin(String.valueOf(MIN_DOCK)));
                 actions.add(() -> { });
             }
         } else if (dock.size() < MAX_DOCK) {
@@ -715,7 +728,7 @@ public class MainActivity extends Activity {
 
     private TextView inputRow(String label, Runnable action) {
         TextView r = text(13, "sans-serif", Color.WHITE);
-        r.setText(label);
+        r.setText(Digits.latin(label));
         r.setTag(action);
         r.setId(View.generateViewId());
         r.setGravity(Gravity.CENTER_VERTICAL);
@@ -739,23 +752,18 @@ public class MainActivity extends Activity {
         int h = now.get(Calendar.HOUR_OF_DAY);
         greeting.setText(h < 4 ? "تصبح على خير" : h < 12 ? "صباح الخير" : "مساء الخير");
         int hh = h % 12 == 0 ? 12 : h % 12;   // always 12-hour
-        clock.setText(arabicDigits(hh + ":" + String.format(Locale.ROOT, "%02d", now.get(Calendar.MINUTE))));
+        clock.setText(hh + ":" + String.format(Locale.ROOT, "%02d", now.get(Calendar.MINUTE)));
         ampm.setText(h < 12 ? "ص" : "م");
         String hijri = "";
         try {
             android.icu.text.SimpleDateFormat f = new android.icu.text.SimpleDateFormat(
-                    "EEEE، d MMMM y", new android.icu.util.ULocale("ar_SA@calendar=islamic-umalqura"));
+                    "EEEE، d MMMM y", new android.icu.util.ULocale("ar_SA@calendar=islamic-umalqura;numbers=latn"));
             hijri = f.format(now.getTime()).replaceAll("\\s*هـ\\s*$", "") + " هـ";
         } catch (Exception ignored) { }
-        String greg = new SimpleDateFormat("d MMMM", new Locale("ar")).format(now.getTime());
-        date.setText(arabicDigits(hijri.isEmpty() ? greg : hijri + "  ·  " + greg));
+        String greg = new SimpleDateFormat("d MMMM", Locale.forLanguageTag("ar-u-nu-latn")).format(now.getTime());
+        date.setText(Digits.latin(hijri.isEmpty() ? greg : hijri + "  ·  " + greg));
     }
 
-    private static String arabicDigits(String s) {
-        StringBuilder b = new StringBuilder(s.length());
-        for (char c : s.toCharArray()) b.append(c >= '0' && c <= '9' ? (char) ('٠' + (c - '0')) : c);
-        return b.toString();
-    }
 
     /** Connected or not comes from ConnectivityManager: WifiManager hides the network (id -1, "<unknown ssid>")
      *  from apps without location access, which looked like "not connected". The name only when readable. */
@@ -773,7 +781,7 @@ public class MainActivity extends Activity {
                 if (s != null && !s.contains("unknown ssid") && !s.replace("\"", "").isEmpty()) name = s.replace("\"", "");
             }
         } catch (SecurityException ignored) { }
-        wifiPill.setText(name);
+        wifiPill.setText(Digits.latin(name));
     }
 
     // ---------------------------------------------------------------- glow
@@ -812,7 +820,7 @@ public class MainActivity extends Activity {
 
     // Hosted photos (photos/index.json in the repo) join the bundled ones. Each is downloaded once into
     // files/photos and reused; offline or on any failure the next bundled photo is shown instead.
-    static final String PHOTO_BASE = "https://raw.githubusercontent.com/tshi-dev/UrTV/master/photos/";
+    static final String PHOTO_BASE = BuildConfig.CONTENT_BASE + "photos/";
     static final long INDEX_MAX_AGE_MS = 24 * 3600 * 1000L;
 
     static final int PHOTO_SET = 5, PHOTO_PERIOD_DAYS = 4;

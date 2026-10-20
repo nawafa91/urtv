@@ -17,14 +17,15 @@
    **USB debugging** (و**Network debugging** إن وُجد).
 2. **على كمبيوتر في نفس شبكة الواي فاي**، افتح أي مساعد ذكاء اصطناعي يقدر يشغّل أوامر، والصق:
 
-   > ركّب تلفزيوني من https://github.com/tshi-dev/UrTV: انسخ المستودع واتبع `docs/SETUP-PROMPT.md` خطوة بخطوة.
+   > ركّب تلفزيوني من https://github.com/nawafa91/urtv: انسخ المستودع واتبع `docs/SETUP-PROMPT.md` خطوة بخطوة.
 
 وبس. المساعد يتصل بالتلفزيون، ويحفظ أول 6 تطبيقات مفضلة من واجهتك الحالية، ويسألك كل الأسئلة مرة وحدة: مدينتك،
 والأندية اللي تتابع مبارياتها، ووش يطلع جنب الساعة (آية وحديث، جديد المسلسلات، مواقيت الصلاة…)، ووش ما تستخدمه أبداً.
 بعدها يكمل الباقي في حوالي 40 دقيقة، ويقيس الذاكرة قبل وبعد.
 
-**آمن:** ما يحذف أي تطبيق، وما يلمس AirPlay ولا Chromecast ولا عرض الشاشة ولا الصوت ولا المداخل، وتبديل الواجهة
-فيه رجوع تلقائي بعد 5 دقائق، و`optimize/reset.sh` يرجّع التلفزيون مثل ما كان.
+**تهيئة الفرع المستقل:** التثبيت العادي يفتح معاينة دون تغيير Home أو تعطيل حزم النظام.
+التجربة المؤقتة اختيارية، وحمايتها غير مضمونة بعد إعادة التشغيل. الرجوع يحافظ على التطبيقين
+وإعداداتهما. راجع [جاهزية TCL](docs/TCL-READINESS.md) قبل استخدام أدوات التثبيت القديمة.
 
 </div>
 
@@ -34,15 +35,16 @@
    **USB debugging** (and **Network debugging** if listed).
 2. **On a computer on the same Wi-Fi**, open any AI agent that can run commands, and paste:
 
-   > Set up my TV with https://github.com/tshi-dev/UrTV: clone it and follow `docs/SETUP-PROMPT.md` step by step.
+   > Set up my TV with https://github.com/nawafa91/urtv: clone it and follow `docs/SETUP-PROMPT.md` step by step.
 
 That's it. The agent connects, keeps your 6 favourite apps from the current home screen, asks a few questions in
 one go (your city, the clubs whose games you follow, what goes beside the clock: verse and hadith, new episodes,
 prayer times…, and what you never use), then does the rest in about 40 minutes, measuring memory before and after.
 The full prompt is in [docs/SETUP-PROMPT.md](docs/SETUP-PROMPT.md) if you want to read or adapt it.
 
-**Safe by design:** nothing is uninstalled; AirPlay, Chromecast, mirroring, voice and inputs are never touched;
-the home-screen switch has a 5-minute automatic fallback, and `optimize/reset.sh` puts the TV back as it came.
+**Independent branch:** the installer defaults to preview without changing Home or disabling system packages.
+The optional temporary Home trial is NOT reboot-safe. Rollback keeps UrTV and its settings.
+Read [TCL readiness](docs/TCL-READINESS.md) before using the legacy optimization workflow.
 
 **Make your own:** to build a different screen or port it to another TV, give your agent this repo and
 [docs/RECREATE-PROMPT.md](docs/RECREATE-PROMPT.md) (the full design and behaviour spec).
@@ -55,8 +57,8 @@ the home-screen switch has a 5-minute automatic fallback, and `optimize/reset.sh
 | **تلفزيونك** · home screen | Clean Arabic launcher: favourites row (5–10 apps) arranged in «ترتيب المفضلة», all apps, inputs, Wi-Fi, settings; optional card from the screensaver (off by default) | `urtv-home.apk` |
 | **Speed-up** | Telemetry, ads and demos off (reversibly), fewer apps kept in memory, Play Store kept from running in the background, faster animations | `optimize/` |
 
-**Download the apps yourself:** [releases/apk-latest](https://github.com/tshi-dev/UrTV/releases/tag/apk-latest)
-(install with `adb install`; the agent route above also sets everything up).
+**Installable builds:** require an approved, signed `apk-vN` release configured in `config/repository.json`.
+No release is published by CI; unavailable APKs stop the installer before ADB is contacted.
 
 ## For agents and scripts
 
@@ -69,7 +71,7 @@ Everything is scriptable over ADB, made for slow Wi-Fi (retries, resumable uploa
 | `optimize/dock.sh` | favourites row: `apps`, `set`, `show`, `reset` |
 | `optimize/measure.sh` · `shot.sh` | memory before/after (restart + settle) · screenshots without navigating |
 | `optimize/keep.sh` | turn back on anything protected (AirPlay, casting, voice, updates…) that something turned off |
-| `optimize/reset.sh` | back to stock: lists re-enabled, stock home and screensaver back, our apps removed |
+| `optimize/reset.sh` | restore recorded Home/screensaver selection; keep both apps and their settings |
 
 What we learned on real TCL sets, and what must stay on: [docs/OPTIMIZE.md](docs/OPTIMIZE.md). Manual test plan:
 [docs/TEST-PLAN.md](docs/TEST-PLAN.md).
@@ -91,8 +93,8 @@ docs/                 the agent prompts (setup, recreate), what we learned on re
 tests/run.sh          every check: build, data, fonts, scripts, private data, flaky-ADB upload, the screen in a browser
 ```
 
-Every push builds both APKs in GitHub Actions and publishes them to the `apk-latest` release; `tests/run.sh` runs
-on every push too. Local Android build (needs the SDK): `python3 src/build.py && gradle -p android assembleRelease`.
+GitHub Actions builds unsigned APKs for validation without publishing a release; `tests/run.sh` runs
+on every push too. Independent sources, external signing and migration: [docs/INDEPENDENT-SETUP.md](docs/INDEPENDENT-SETUP.md). Local Android build (needs the SDK): `python3 src/build.py && gradle -p android assembleRelease`.
 
 **Screen settings** come from the URL fragment (works on `file://` and in WebView):
 
@@ -120,3 +122,5 @@ Photos: Unsplash photographers, listed in [docs/PHOTO-CREDITS.md](docs/PHOTO-CRE
 Noto Naskh Arabic for ﷺ ﴿﴾ (OFL, `assets/fonts/`).
 Home screen adapted from [mihirgupta0900/tv-home](https://github.com/mihirgupta0900/tv-home) (MIT,
 `android/launcher/LICENSE-tv-home`). Package ratings from [UAD-ng](https://github.com/Universal-Debloater-Alliance/universal-android-debloater-next-generation).
+
+Upstream project: [tshi-dev/UrTV](https://github.com/tshi-dev/UrTV). This fork keeps upstream attribution and reviews upstream changes separately.

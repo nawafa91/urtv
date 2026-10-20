@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
 }
 
+apply from: rootProject.file('independent.gradle')
+
 android {
     namespace 'sa.urtv.screensaver'
     compileSdk 34
@@ -10,25 +12,14 @@ android {
         applicationId 'sa.urtv.screensaver'
         minSdk 21
         targetSdk 34
-        // CI passes its run number so every build installs over the previous one
-        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int)
-        versionName "2.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
-    }
-
-    signingConfigs {
-        // one fixed key so new builds install over old ones on the TV
-        release {
-            storeFile file('../tvsaver.keystore')
-            storePassword 'tvsaver'
-            keyAlias 'tvsaver'
-            keyPassword 'tvsaver'
-        }
+        versionCode project.ext.urtvVersionCode
+        versionName "2.${project.ext.urtvVersionCode}"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.release
+            // Configured by independent.gradle only when all external signing inputs exist.
         }
     }
 

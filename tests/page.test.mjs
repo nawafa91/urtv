@@ -13,6 +13,8 @@ import path from 'node:path';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const page = name => 'file://' + path.join(ROOT, 'dist', name);
 const INDEX = readFileSync(path.join(ROOT, 'photos/index.json'), 'utf8');
+const source = JSON.parse(readFileSync(path.join(ROOT, 'config/repository.json'), 'utf8'));
+const ASSET_BASE = `https://raw.githubusercontent.com/${source.repository}/${source.ref}/`;
 let failed = 0;
 const check = (name, ok, detail = '') => {
   console.log((ok ? 'PASS ' : 'FAIL ') + name + (ok ? '' : '  -> ' + detail));
@@ -21,16 +23,17 @@ const check = (name, ok, detail = '') => {
 
 const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
 
-async function open(file, hash, { width = 1920, height = 1080, seed = true } = {}) {
-  const ctx = await browser.newContext({ viewport: { width, height } });
+async function open(file, hash, { width = 1920, height = 1080, seed = true, clockTime = null, timezoneId = undefined } = {}) {
+  const ctx = await browser.newContext({ viewport: { width, height }, timezoneId });
   await ctx.route(/^https?:/, r => {
-    const u = r.request().url(), i = u.indexOf('/master/'), rel = i > 0 ? u.slice(i + 8) : '';
-    if (/^(assets\/(backgrounds|fonts)|photos)\//.test(rel))
+    const u = r.request().url(), rel = u.startsWith(ASSET_BASE) ? u.slice(ASSET_BASE.length) : '';
+    if (/^(assets\/(backgrounds|screensaver|fonts)|photos)\//.test(rel))
       return r.fulfill({ path: path.join(ROOT, rel), headers: { 'Access-Control-Allow-Origin': '*' } });
     return r.abort();
   });
   if (seed) await ctx.addInitScript(i => { try { localStorage.setItem('photoIndex', i); } catch (e) {} }, INDEX);
   const p = await ctx.newPage();
+  if(clockTime){ await p.clock.install({time:clockTime}); await p.clock.pauseAt(clockTime); }
   const errors = [];
   p.on('pageerror', e => errors.push(e.message));
   await p.goto(page(file) + '#' + hash);
@@ -40,32 +43,98 @@ async function open(file, hash, { width = 1920, height = 1080, seed = true } = {
   return { p, ctx, errors };
 }
 
-// ---- both pages, three screen sizes: no errors, shown, clock right, nothing off screen, Arabic digits
+// ---- both pages, three screen sizes: no errors, shown, clock right, nothing off screen, Western digits
 for (const file of ['urtv.html', 'tv.html']) {
   for (const [w, h] of [[1920, 1080], [1280, 720], [960, 540]]) {
     const { p, ctx, errors } = await open(file, 'city=جدة&lat=21.5433&lon=39.1728', { width: w, height: h });
     const tag = `${file} ${w}x${h}`;
     check(`${tag}: no script errors, page shown`, !errors.length, errors.join('; '));
+    check(`${tag}: stable-content health acknowledgement`, await p.evaluate(() => window.URTV_READY === true
+      && document.querySelector('meta[name="urtv-content-contract"]').content === '1'));
     const r = await p.evaluate(() => {
       const hh = document.getElementById('ck-h').textContent, mm = document.getElementById('ck-m').textContent;
-      const toN = s => +s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+      const toN = s => +s;
       const off = [...document.querySelectorAll('.stage *')].filter(e => {
         const b = e.getBoundingClientRect(), cs = getComputedStyle(e);
         return cs.display !== 'none' && b.width && (b.left < -2 || b.right > innerWidth + 2 || b.bottom > innerHeight + 2);
       }).map(e => e.className || e.id || e.tagName).slice(0, 5);
-      const latin = (document.querySelector('.stage').innerText.match(/[0-9]+/g) || []).filter(x => x !== '500');
+      const overlaps = document.querySelector('.clockwrap').getBoundingClientRect().bottom > document.querySelector('.prayer-schedule').getBoundingClientRect().top + 5;
+      const eastern = document.querySelector('.stage').innerText.match(/[٠-٩]/g) || [];
       return { hh, mm, h: toN(hh), m: toN(mm), ap: document.getElementById('ck-ap').textContent,
-               sub: document.getElementById('clock-sub').textContent, off, latin,
+               sub: document.getElementById('clock-sub').textContent, off, eastern, overlaps,
                photo: !!document.querySelector('.photo').style.backgroundImage };
     });
-    check(`${tag}: 12-hour clock in Arabic digits`, /^[٠-٩]{1,2}$/.test(r.hh) && r.h >= 1 && r.h <= 12
-      && /^[٠-٩]{2}$/.test(r.mm) && r.m < 60 && ['ص', 'م'].includes(r.ap), JSON.stringify(r));
+    check(`${tag}: 12-hour clock in Western digits`, /^[0-9]{1,2}$/.test(r.hh) && r.h >= 1 && r.h <= 12
+      && /^[0-9]{2}$/.test(r.mm) && r.m < 60 && ['ص', 'م'].includes(r.ap), JSON.stringify(r));
     check(`${tag}: city from the settings`, r.sub === 'بتوقيت جدة', r.sub);
-    check(`${tag}: nothing off screen`, !r.off.length, r.off.join(', '));
-    check(`${tag}: no Latin digits (except S&P 500)`, !r.latin.length, r.latin.join(' '));
+    check(`${tag}: nothing off screen or overlapping prayer schedule`, !r.off.length && !r.overlaps, r.off.join(', ') + ' overlap=' + r.overlaps);
+    check(`${tag}: no Eastern Arabic digits`, !r.eastern.length, r.eastern.join(' '));
     check(`${tag}: a background photo`, r.photo);
     await ctx.close();
   }
+}
+
+// ---- Industrial Yanbu defaults, retired shows, and shared weather/prayer coordinates
+{
+  const { p, ctx, errors } = await open('tv.html', '');
+  const before = await p.evaluate(() => ({ city:CONFIG.city, lat:CONFIG.latitude, lon:CONFIG.longitude,
+    tz:CONFIG.timezone, panel:!!document.querySelector('.week'),
+    clock:document.querySelector('.clockwrap').getBoundingClientRect().x,
+    width:document.querySelector('.clockwrap').getBoundingClientRect().width }));
+  check('default is Industrial Yanbu, not Yanbu al-Bahr', before.city === 'ينبع الصناعية'
+    && before.lat === 23.99 && before.lon === 38.23 && before.tz === 'Asia/Riyadh', JSON.stringify(before));
+  check('weekly shows section removed and clock centred', !before.panel
+    && Math.abs(before.clock + before.width / 2 - 960) < 5 && !errors.length, JSON.stringify(before));
+  const seen = [];
+  await ctx.route('https://api.aladhan.com/**', r => {
+    seen.push(r.request().url());
+    return r.fulfill({json:{data:{meta:{method:{id:4},timezone:'Asia/Riyadh'},timings:{Fajr:'05:10', Sunrise:'06:25', Dhuhr:'12:15', Asr:'15:30', Maghrib:'18:05', Isha:'19:35'}}}});
+  });
+  await ctx.route('https://api.open-meteo.com/**', r => {
+    seen.push(r.request().url());
+    return r.fulfill({json:{current:{temperature_2m:32,weather_code:2},daily:{time:['2026-10-20'],temperature_2m_max:[35],temperature_2m_min:[27],weather_code:[2]}}});
+  });
+  await p.evaluate(() => Promise.all([loadPrayers(), loadWeather()]));
+  check('weather and prayer services use the same Industrial Yanbu location', seen.length === 2 && seen.every(s => {
+    const u = new URL(s); return u.searchParams.get('latitude') === '23.99'
+      && u.searchParams.get('longitude') === '38.23';
+  }) && seen.some(s => new URL(s).searchParams.get('method') === '4'), JSON.stringify(seen));
+  const values = await p.evaluate(() => ({text:document.querySelector('.stage').innerText,
+    weather:document.getElementById('wx-temp').textContent, range:document.getElementById('wx-range').textContent,
+    hijri:document.getElementById('hijri').textContent, greg:document.getElementById('greg').textContent,
+    prayer:document.getElementById('prayer-time').textContent}));
+  check('Western digits in dates, weather and prayer times', !/[٠-٩]/.test(values.text)
+    && values.weather === '32°' && values.range === '35° / 27°'
+    && /[0-9]/.test(values.hijri) && /[0-9]/.test(values.greg) && /[0-9]+:[0-9]{2}/.test(values.prayer), JSON.stringify(values));
+  check('validated Aladhan response reports the expected calculation source',await p.evaluate(()=>PRAYER_SOURCE.startsWith('Aladhan')));
+  await ctx.route('https://api.aladhan.com/**', r=>r.fulfill({json:{data:{meta:{method:{id:3},timezone:'UTC'},timings:{Fajr:'01:00',Dhuhr:'02:00',Asr:'03:00',Maghrib:'04:00',Isha:'05:00'}}}}));
+  await p.evaluate(()=>loadPrayers());
+  check('wrong method or timezone is rejected in favour of the local calculation',await p.evaluate(()=>PRAYER_SOURCE.includes('محلي') && PRAYERS[0].h!==1));
+  const calm = await p.evaluate(() => {
+    REMOTE_BGS = [{f:'f5ZB0LHwi0s.jpg'}, ...BGS.map(b => ({f:b.f}))];
+    BG_SLOT = -1; applyBackground(true);
+    return {mode:CONFIG.backgrounds, filenames:BGS.map(b=>b.f),src:document.querySelector('.photo').style.backgroundImage};
+  });
+  await p.waitForTimeout(500);
+  const photo=await p.evaluate(()=>document.querySelector('.photo').style.backgroundImage);
+  check('calm nature defaults exclude urban wallpapers', !photo.includes('f5ZB0LHwi0s.jpg') && calm.mode === 'calm'
+    && calm.filenames.length >= 3 && !calm.filenames.includes('f5ZB0LHwi0s.jpg'), JSON.stringify(calm));
+  await ctx.close();
+}
+{
+  const { p, ctx } = await open('tv.html', 'city=جدة&lat=21.5433&lon=39.1728&backgrounds=all');
+  const requests=[];
+  await ctx.route('https://api.aladhan.com/**', r => {requests.push(r.request().url());return r.abort();});
+  await ctx.route('https://api.open-meteo.com/**', r => {requests.push(r.request().url());return r.abort();});
+  await p.evaluate(() => Promise.all([loadPrayers(),loadWeather()]));
+  await p.evaluate(() => { REMOTE_BGS=[{f:'f5ZB0LHwi0s.jpg',d:.88}]; BG_SLOT=-1; applyBackground(true); });
+  await p.waitForFunction(() => document.querySelector('.photo').style.backgroundImage.includes('f5ZB0LHwi0s.jpg'));
+  const c=await p.evaluate(()=>({city:CONFIG.city,backgrounds:CONFIG.backgrounds}));
+  check('city override reaches both services; full wallpaper collection remains selectable', c.city === 'جدة'
+    && c.backgrounds === 'all' && requests.length === 2 && requests.every(s => {
+      const q=new URL(s).searchParams;return q.get('latitude') === '21.5433' && q.get('longitude') === '39.1728';
+    }), JSON.stringify({c,requests}));
+  await ctx.close();
 }
 
 // ---- every card beside the clock, with sample data where the card needs the network
@@ -77,7 +146,7 @@ const SAMPLE = {
   },
 };
 const EXPECT = { prayers: [6, 'مواقيت اليوم'], forecast: [5, 'الأيام القادمة'], matches: [2, 'مباريات فرقك'],
-                 verse: [2, null], shows: [1, 'هذا الأسبوع'] };
+                 verse: [2, null] };
 for (const [panel, [rows, title]] of Object.entries(EXPECT)) {
   const { p, ctx, errors } = await open('tv.html', 'teams=136013&panel=' + panel);
   if (SAMPLE[panel]) await p.evaluate(`(${SAMPLE[panel]})(); renderPanel(false);`);
@@ -100,10 +169,10 @@ for (const [panel, [rows, title]] of Object.entries(EXPECT)) {
 }
 
 // ---- old settings links and «لا شيء»
-for (const [hash, panel, shown] of [['', 'shows', true], ['week=0', 'none', false], ['week=1', 'shows', true],
-                                     ['panel=none', 'none', false], ['panel=bogus', 'shows', true]]) {
+for (const [hash, panel, shown] of [['', 'none', false], ['week=0', 'none', false], ['week=1', 'none', false],
+                                     ['panel=none', 'none', false], ['panel=shows', 'none', false], ['panel=bogus', 'none', false]]) {
   const { p, ctx, errors } = await open('tv.html', hash);
-  const r = await p.evaluate(() => [CONFIG.panel, getComputedStyle(document.querySelector('.week')).display !== 'none']);
+  const r = await p.evaluate(() => [CONFIG.panel, !!document.querySelector('.week')]);
   check(`link #${hash || '(empty)'} → ${panel}, card ${shown ? 'shown' : 'hidden'}`,
     !errors.length && r[0] === panel && r[1] === shown, JSON.stringify(r) + errors.join('; '));
   await ctx.close();
@@ -114,7 +183,7 @@ for (const panel of ['prayers', 'verse', 'shows']) {
   const { p, ctx, errors } = await open('tv.html', `widget=1&panel=${panel}`, { width: 461, height: 250 });
   const r = await p.evaluate(() => ({
     bg: getComputedStyle(document.body).backgroundColor,
-    visible: [...document.querySelectorAll('.top,.clockwrap,.bottom,.photo')].filter(e => getComputedStyle(e).display !== 'none').length,
+    visible: [...document.querySelectorAll('.top,.clockwrap,.bottom,.photo,.prayer-schedule,.reminder-card')].filter(e => getComputedStyle(e).display !== 'none').length,
     card: document.querySelector('.week').getBoundingClientRect().width }));
   check(`launcher card ${panel}: transparent, only the card`, !errors.length && r.bg === 'rgba(0, 0, 0, 0)'
     && r.visible === 0 && r.card > 400, JSON.stringify(r) + errors.join('; '));
@@ -126,12 +195,79 @@ for (const panel of ['prayers', 'verse', 'shows']) {
   const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
   await ctx.route(/^https?:/, r => r.abort());
   const p = await ctx.newPage();
-  await p.goto(page('tv.html') + '#panel=shows');
+  await p.goto(page('tv.html') + '#panel=prayers');
   await p.waitForTimeout(800);
-  await p.evaluate(() => { document.getElementById('week-list').innerHTML = '<li>SAVED</li>'; saveSnap(); });
+  await p.evaluate(() => { document.getElementById('wx-temp').textContent = '32°'; saveSnap(); });
   await p.reload();
-  const t = await p.evaluate(() => document.getElementById('week-list').textContent);
-  check('saved panels restored on the next start', t === 'SAVED', t);
+  const t = await p.evaluate(() => document.getElementById('wx-temp').textContent);
+  check('saved weather restored on the next start', t === '32°', t);
+  await ctx.close();
+}
+
+// ---- Offline reminder rotation, no truncation and explicit opt-out
+{
+  const clockTime = new Date(Date.UTC(2026,9,20,9));
+  const {p,ctx,errors}=await open('tv.html','',{clockTime});
+  const read=()=>p.evaluate(()=>({title:document.getElementById('reminder-title').textContent,
+    text:document.getElementById('reminder-text').textContent,source:document.getElementById('reminder-source').textContent}));
+  const first=await read();
+  await p.clock.fastForward(299000); const unchanged=await read();
+  await p.clock.fastForward(1000); const second=await read();
+  await p.clock.fastForward(300000); const third=await read();
+  check('five-minute timer alternates complete verse, hadith, next verse without consecutive repeats',
+    first.title==='آية قرآنية' && unchanged.text===first.text && second.title==='حديث نبوي صحيح'
+    && third.title==='آية قرآنية' && first.text!==second.text && first.text!==third.text && !errors.length,
+    JSON.stringify({first,second,third,errors}));
+  for(const [width,height] of [[960,540],[1280,720],[1920,1080]]){
+    await p.setViewportSize({width,height});
+    await p.evaluate(()=>document.fonts.ready);
+    const audit=await p.evaluate(()=>{
+    const realNow=Date.now, out=[];
+    try{
+      for(let slot=0;slot<24;slot++){
+        Date.now=()=>slot*REMINDER_INTERVAL_MS;LAST_REMINDER_SLOT=null;renderReminder();
+        const item=reminderForSlot(slot), t=document.getElementById('reminder-text'), card=document.getElementById('reminder-card');
+        const source=document.getElementById('reminder-source'),clock=document.querySelector('.clockwrap').getBoundingClientRect();
+        const schedule=document.querySelector('.prayer-schedule').getBoundingClientRect();
+        const bottom=document.querySelector('.bottom').getBoundingClientRect();
+        out.push(t.textContent===item.record.text && !!source.textContent
+          && t.scrollHeight<=t.clientHeight+1 && getComputedStyle(t).textOverflow!=='ellipsis'
+          && t.getBoundingClientRect().bottom<=source.getBoundingClientRect().top
+          && source.getBoundingClientRect().bottom<=card.getBoundingClientRect().bottom
+          && clock.top>=document.querySelector('.top').getBoundingClientRect().bottom
+          && clock.bottom<schedule.top && schedule.bottom<bottom.top && bottom.bottom<=innerHeight);
+      }
+    }finally{Date.now=realNow;}
+    return out;
+  });
+    check(`all 24 full source records fit without clipping or overlap at ${width}x${height}`,
+      audit.length===24 && audit.every(Boolean),JSON.stringify(audit));
+  }
+  const prayers=await p.evaluate(()=>({count:document.querySelectorAll('#prayer-schedule li').length,
+    selected:document.querySelectorAll('#prayer-schedule li.next').length,
+    next:document.getElementById('schedule-countdown').textContent,
+    source:document.getElementById('prayer-method').textContent}));
+  check('offline schedule has five prayers, one next prayer and a countdown with method and timezone',
+    prayers.count===5 && prayers.selected===1 && prayers.next.includes('بعد')
+    && prayers.source.includes('Asia/Riyadh') && prayers.source.includes('18.5') && prayers.source.includes('محلي'),JSON.stringify(prayers));
+  const afterIsha=await p.evaluate(()=>{const n=nextPrayerInfo(new Date('2026-10-20T23:30:00+03:00'));return {key:n.prayer.key,seconds:n.seconds,tomorrow:n.tomorrow};});
+  check('after Isha countdown targets next-day Fajr',afterIsha.key==='Fajr' && afterIsha.tomorrow && afterIsha.seconds>0 && afterIsha.seconds<86400,JSON.stringify(afterIsha));
+  await ctx.close();
+}
+{
+  const {p,ctx,errors}=await open('tv.html','reminders=0');
+  check('reminders opt-out hides the card while leaving all five prayers visible',await p.evaluate(()=>document.getElementById('reminder-card').hidden
+    && !document.documentElement.classList.contains('has-reminders') && document.querySelectorAll('#prayer-schedule li').length===5) && !errors.length,errors.join('; '));
+  await ctx.close();
+}
+// Independent Adhan 4.4.3 regression fixtures cover winter, summer and Ramadan.
+{
+  const reference=JSON.parse(readFileSync(path.join(ROOT,'tests/fixtures/prayer-reference.json'),'utf8'));
+  const {p,ctx}=await open('tv.html','reminders=0',{timezoneId:'America/New_York'});
+  const comparisons=await p.evaluate(rows=>rows.map(r=>({date:r.date,expected:r.timings,actual:computePrayers(new Date(r.date)),ramadan:hijriMonthNow(new Date(r.date))===9})),reference.fixtures);
+  const minutes=s=>s.split(':').map(Number).reduce((h,m)=>h*60+m);
+  check('Umm al-Qura calculation matches independent seasonal and Ramadan fixtures within one minute',comparisons.every(r=>r.ramadan===reference.fixtures.find(x=>x.date===r.date).ramadan
+    && Object.keys(r.expected).every(k=>Math.abs(minutes(r.actual[k])-minutes(r.expected[k]))<=1)),JSON.stringify(comparisons));
   await ctx.close();
 }
 
@@ -149,22 +285,22 @@ for (const panel of ['prayers', 'verse', 'shows']) {
 
   await p.evaluate(`MATCHES['136013'] = ${game('g1', 1.8, [2, 1], 'FT')}; renderMatches();`);
   let t = await slot();
-  check('whistle blown: final score at once, not «مباشر»', t.includes('النتيجة النهائية') && t.includes('٢ - ١') && !t.includes('مباشر'), t);
+  check('whistle blown: final score at once, not «مباشر»', t.includes('النتيجة النهائية') && t.includes('2 - 1') && !t.includes('مباشر'), t);
 
   await p.evaluate(`keepResult('136013', MATCHES['136013']); MATCHES['136013'] = ${game('g2', -72, null, 'NS')};
                     RESULTS = {}; renderMatches();`);
   t = await slot();
-  check('API moved to the next fixture: score still shown', t.includes('النتيجة النهائية') && t.includes('٢ - ١'), t);
+  check('API moved to the next fixture: score still shown', t.includes('النتيجة النهائية') && t.includes('2 - 1'), t);
 
   await p.reload();
   await p.waitForTimeout(800);
   await p.evaluate(`MATCHES['136013'] = ${game('g2', -72, null, 'NS')}; renderMatches();`);
   t = await slot();
-  check('after a restart the same day: score still shown', t.includes('٢ - ١'), t);
+  check('after a restart the same day: score still shown', t.includes('2 - 1'), t);
 
   await p.evaluate(`KEPT['136013'] = [${game('g1', 27, [2, 1], 'FT')}]; renderMatches();`);
   t = await slot();
-  check('a day later: score gone, next fixture shown', !t.includes('٢ - ١') && t.includes('×'), t);
+  check('a day later: score gone, next fixture shown', !t.includes('2 - 1') && t.includes('×'), t);
   await ctx.close();
 }
 

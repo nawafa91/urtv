@@ -8,14 +8,14 @@ Paste everything below the line into an agent that can read GitHub, browse the w
 
 You are extending **شاشة تلفزيونك**, an Arabic always-on TV screensaver/dashboard, so it runs on as many TV platforms as possible, choosing the best delivery method for each. Research first, then build, then document.
 
-Repository: **https://github.com/tshi-dev/UrTV** (public). Work on a branch and open a pull request; do not push to `master` directly.
+Repository: **https://github.com/nawafa91/urtv** (public). Work on a branch and open a pull request; do not push to `master` directly.
 
 ## What already exists (read these first)
 
 - `README.md` — overview, build, URL fragment parameters.
 - `src/template.html` — the whole screen: one HTML/CSS/JS page, no framework, no build step. `src/build.py` makes `dist/urtv.html` (fonts and photos inlined, ~2.7 MB, works from `file://` and offline) and `dist/tv.html` (0.1 MB, for the Android app).
 - `docs/RECREATE-PROMPT.md` — the full design and behaviour spec. Treat it as the source of truth for what the screen must show.
-- `android/` — the current native Android app: a `DreamService` (system screensaver), a settings screen (city, up to 10 teams, the card beside the clock, show filters), and auto-update that downloads `dist/tv.html` from `master` every 6 hours. Built by `.github/workflows/android.yml` and published to the `apk-latest` release.
+- `android/` — the current native Android app: a `DreamService` (system screensaver), a settings screen (city, up to 10 teams, the card beside the clock, show filters), and stable-channel updates that validate compatibility, immutable commits and SHA-256. Built unsigned by `.github/workflows/android.yml`, without publication. See `TCL-READINESS.md`.
 - `docs/TEST-PLAN.md` — how the Android build is tested; reuse its style.
 
 Settings reach the page through the URL fragment, not a query string:

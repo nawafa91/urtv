@@ -1,0 +1,48 @@
+// Applied to both application modules: one content source and one external signing identity.
+def source = new groovy.json.JsonSlurper().parse(rootProject.file('../config/repository.json'))
+def contentBase = "https://raw.githubusercontent.com/${source.repository}/${source.ref}/"
+if (!(source.ref ==~ /[a-f0-9]{40}/)) throw new GradleException('Content assets must use a pinned commit.')
+def names = ['URTV_KEYSTORE_PATH', 'URTV_KEYSTORE_PASSWORD', 'URTV_KEY_ALIAS', 'URTV_KEY_PASSWORD']
+def values = names.collectEntries { [(it): System.getenv(it)] }
+def supplied = names.findAll { values[it] != null && !values[it].isEmpty() }
+if (!supplied.isEmpty() && supplied.size() != names.size()) {
+    throw new GradleException('Incomplete signing configuration. Supply all URTV signing variables or none.')
+}
+def version = System.getenv('URTV_VERSION_CODE') ?: '1'
+if (!(version ==~ /[1-9][0-9]*/) || new BigInteger(version) > 2100000000) {
+    throw new GradleException('URTV_VERSION_CODE must be an integer between 1 and 2100000000.')
+}
+project.ext.urtvVersionCode = version.toInteger()
+
+android {
+    buildFeatures { buildConfig = true }
+    defaultConfig {
+        buildConfigField 'String', 'CONTENT_BASE', '"' + contentBase + '"'
+        buildConfigField 'String', 'CONTENT_REPOSITORY', '"' + source.repository + '"'
+        buildConfigField 'String', 'CONTENT_MANIFEST', '"https://github.com/' + source.repository + '/releases/download/' + source.content_channel + '/manifest.json"'
+        buildConfigField 'int', 'CONTENT_CONTRACT', source.content_contract.toString()
+    }
+}
+if (supplied.size() == names.size()) {
+    if (!System.getenv('URTV_VERSION_CODE')) {
+        throw new GradleException('Signed builds require an explicit, increasing URTV_VERSION_CODE.')
+    }
+    def keyFile = new File(values.URTV_KEYSTORE_PATH)
+    if (!keyFile.isAbsolute() || !keyFile.isFile()) {
+        throw new GradleException('URTV_KEYSTORE_PATH must point to an existing absolute external file.')
+    }
+    def checkout = rootProject.projectDir.parentFile.canonicalFile.toPath()
+    if (keyFile.canonicalFile.toPath().startsWith(checkout)) {
+        throw new GradleException('Keep the signing keystore outside the repository checkout.')
+    }
+    android.signingConfigs {
+        independent {
+            storeFile keyFile
+            storePassword values.URTV_KEYSTORE_PASSWORD
+            keyAlias values.URTV_KEY_ALIAS
+            keyPassword values.URTV_KEY_PASSWORD
+        }
+    }
+    android.buildTypes.release.signingConfig = android.signingConfigs.independent
+}
+// With no signing inputs, assembleRelease creates unsigned APKs and never generates a key.

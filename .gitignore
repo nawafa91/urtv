@@ -1,4 +1,12 @@
 *.apk
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+*.key
+.env
+.env.*
 __pycache__/
 node_modules/
 android/.gradle/

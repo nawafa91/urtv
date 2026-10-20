@@ -30,6 +30,7 @@ case "${1:-}" in
   show)   send GET ;;
   cities) send CITIES ;;
   update) send UPDATE ;;
+  rollback) send ROLLBACK ;;
   city)
     [ $# -eq 2 ] || [ $# -eq 4 ] || { echo "usage: optimize/saver.sh city NAME [LAT LON]"; exit 1; }
     extra="--es city $(quote "$2")"

@@ -1,55 +1,37 @@
-name: Build APKs
+name: Build unsigned APKs
 
 on:
   push:
-    branches: [master]
-    paths: ['src/**', 'assets/**', 'android/**', '.github/workflows/android.yml']
+    branches: [master, feat/independent-setup]
+    paths: ['src/**', 'assets/**', 'config/**', 'android/**', '.github/workflows/android.yml']
+  pull_request:
+    paths: ['src/**', 'assets/**', 'config/**', 'android/**', '.github/workflows/android.yml']
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   apk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Build the page
         run: python3 src/build.py
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-
-      - name: Build APKs
-        run: gradle -p android assembleRelease --no-daemon
-
-      - name: Rename
-        run: |
-          cp android/app/build/outputs/apk/release/app-release.apk urtv-screensaver.apk
-          cp android/launcher/build/outputs/apk/release/launcher-release.apk urtv-home.apk
-
+      # Signing stays outside GitHub. No signing secrets and no release publication.
+      - name: Build unsigned APKs
+        run: gradle -p android assembleRelease --no-daemon --max-workers=2
       - uses: actions/upload-artifact@v4
         with:
-          name: apks
+          name: unsigned-apks
           path: |
-            urtv-screensaver.apk
-            urtv-home.apk
-
-      # fixed download links: .../releases/download/apk-latest/urtv-screensaver.apk and urtv-home.apk
-      - name: Publish to the apk-latest release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: apk-latest
-          name: Latest APKs
-          body: "Build ${{ github.run_number }} from ${{ github.sha }}"
-          files: |
-            urtv-screensaver.apk
-            urtv-home.apk
-          make_latest: true
+            android/app/build/outputs/apk/release/*-unsigned.apk
+            android/launcher/build/outputs/apk/release/*-unsigned.apk
+          if-no-files-found: error
