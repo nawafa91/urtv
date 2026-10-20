@@ -133,7 +133,7 @@ final class Prefs {
     boolean reminders() { return sp.getBoolean("reminders", true); }
     void setReminders(boolean enabled) { sp.edit().putBoolean("reminders", enabled).apply(); }
 
-    String backgrounds() { return sp.getString("backgrounds", "calm"); }
+    String backgrounds() { return sp.getString("backgrounds", "all"); }
     void setBackgrounds(String v) { sp.edit().putString("backgrounds", v).apply(); }
 
     boolean autoUpdate() { return sp.getBoolean("autoUpdate", true); }

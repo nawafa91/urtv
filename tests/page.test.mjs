@@ -58,15 +58,16 @@ for (const file of ['urtv.html', 'tv.html']) {
         const b = e.getBoundingClientRect(), cs = getComputedStyle(e);
         return cs.display !== 'none' && b.width && (b.left < -2 || b.right > innerWidth + 2 || b.bottom > innerHeight + 2);
       }).map(e => e.className || e.id || e.tagName).slice(0, 5);
-      const overlaps = document.querySelector('.clockwrap').getBoundingClientRect().bottom > document.querySelector('.prayer-schedule').getBoundingClientRect().top + 5;
+      const a=document.querySelector('.clockwrap').getBoundingClientRect(), b=document.querySelector('.prayer-schedule').getBoundingClientRect();
+      const overlaps = a.left<b.right && a.right>b.left && a.top<b.bottom && a.bottom>b.top;
       const eastern = document.querySelector('.stage').innerText.match(/[٠-٩]/g) || [];
       return { hh, mm, h: toN(hh), m: toN(mm), ap: document.getElementById('ck-ap').textContent,
-               sub: document.getElementById('clock-sub').textContent, off, eastern, overlaps,
+               sub: document.getElementById('wx-city').textContent, off, eastern, overlaps,
                photo: !!document.querySelector('.photo').style.backgroundImage };
     });
     check(`${tag}: 12-hour clock in Western digits`, /^[0-9]{1,2}$/.test(r.hh) && r.h >= 1 && r.h <= 12
       && /^[0-9]{2}$/.test(r.mm) && r.m < 60 && ['ص', 'م'].includes(r.ap), JSON.stringify(r));
-    check(`${tag}: city from the settings`, r.sub === 'بتوقيت جدة', r.sub);
+    check(`${tag}: city from the settings`, r.sub === 'جدة', r.sub);
     check(`${tag}: nothing off screen or overlapping prayer schedule`, !r.off.length && !r.overlaps, r.off.join(', ') + ' overlap=' + r.overlaps);
     check(`${tag}: no Eastern Arabic digits`, !r.eastern.length, r.eastern.join(' '));
     check(`${tag}: a background photo`, r.photo);
@@ -79,12 +80,12 @@ for (const file of ['urtv.html', 'tv.html']) {
   const { p, ctx, errors } = await open('tv.html', '');
   const before = await p.evaluate(() => ({ city:CONFIG.city, lat:CONFIG.latitude, lon:CONFIG.longitude,
     tz:CONFIG.timezone, panel:!!document.querySelector('.week'),
-    clock:document.querySelector('.clockwrap').getBoundingClientRect().x,
-    width:document.querySelector('.clockwrap').getBoundingClientRect().width }));
+    clock:document.querySelector('.clock').getBoundingClientRect().x,
+    width:document.querySelector('.clock').getBoundingClientRect().width }));
   check('default is Industrial Yanbu, not Yanbu al-Bahr', before.city === 'ينبع الصناعية'
     && before.lat === 23.99 && before.lon === 38.23 && before.tz === 'Asia/Riyadh', JSON.stringify(before));
-  check('weekly shows section removed and clock centred', !before.panel
-    && Math.abs(before.clock + before.width / 2 - 960) < 5 && !errors.length, JSON.stringify(before));
+  check('weekly shows removed and clock placed on the right', !before.panel
+    && before.clock > 960 && !errors.length, JSON.stringify(before));
   const seen = [];
   await ctx.route('https://api.aladhan.com/**', r => {
     seen.push(r.request().url());
@@ -110,15 +111,8 @@ for (const file of ['urtv.html', 'tv.html']) {
   await ctx.route('https://api.aladhan.com/**', r=>r.fulfill({json:{data:{meta:{method:{id:3},timezone:'UTC'},timings:{Fajr:'01:00',Dhuhr:'02:00',Asr:'03:00',Maghrib:'04:00',Isha:'05:00'}}}}));
   await p.evaluate(()=>loadPrayers());
   check('wrong method or timezone is rejected in favour of the local calculation',await p.evaluate(()=>PRAYER_SOURCE.includes('محلي') && PRAYERS[0].h!==1));
-  const calm = await p.evaluate(() => {
-    REMOTE_BGS = [{f:'f5ZB0LHwi0s.jpg'}, ...BGS.map(b => ({f:b.f}))];
-    BG_SLOT = -1; applyBackground(true);
-    return {mode:CONFIG.backgrounds, filenames:BGS.map(b=>b.f),src:document.querySelector('.photo').style.backgroundImage};
-  });
-  await p.waitForTimeout(500);
-  const photo=await p.evaluate(()=>document.querySelector('.photo').style.backgroundImage);
-  check('calm nature defaults exclude urban wallpapers', !photo.includes('f5ZB0LHwi0s.jpg') && calm.mode === 'calm'
-    && calm.filenames.length >= 3 && !calm.filenames.includes('f5ZB0LHwi0s.jpg'), JSON.stringify(calm));
+  const collection=await p.evaluate(()=>({mode:CONFIG.backgrounds,count:REMOTE_BGS.length,names:new Set(REMOTE_BGS.map(p=>p.f)).size}));
+  check('all 86 distinct indexed backgrounds available by default', collection.mode==='all' && collection.count===86 && collection.names===86,JSON.stringify(collection));
   await ctx.close();
 }
 {
@@ -127,7 +121,7 @@ for (const file of ['urtv.html', 'tv.html']) {
   await ctx.route('https://api.aladhan.com/**', r => {requests.push(r.request().url());return r.abort();});
   await ctx.route('https://api.open-meteo.com/**', r => {requests.push(r.request().url());return r.abort();});
   await p.evaluate(() => Promise.all([loadPrayers(),loadWeather()]));
-  await p.evaluate(() => { REMOTE_BGS=[{f:'f5ZB0LHwi0s.jpg',d:.88}]; BG_SLOT=-1; applyBackground(true); });
+  await p.evaluate(() => { REMOTE_BGS=[{f:'f5ZB0LHwi0s.jpg',d:.88}]; applyBackground(true); });
   await p.waitForFunction(() => document.querySelector('.photo').style.backgroundImage.includes('f5ZB0LHwi0s.jpg'));
   const c=await p.evaluate(()=>({city:CONFIG.city,backgrounds:CONFIG.backgrounds}));
   check('city override reaches both services; full wallpaper collection remains selectable', c.city === 'جدة'
@@ -148,7 +142,7 @@ const SAMPLE = {
 const EXPECT = { prayers: [6, 'مواقيت اليوم'], forecast: [5, 'الأيام القادمة'], matches: [2, 'مباريات فرقك'],
                  verse: [2, null] };
 for (const [panel, [rows, title]] of Object.entries(EXPECT)) {
-  const { p, ctx, errors } = await open('tv.html', 'teams=136013&panel=' + panel);
+  const { p, ctx, errors } = await open('tv.html', 'widget=1&teams=136013&panel=' + panel);
   if (SAMPLE[panel]) await p.evaluate(`(${SAMPLE[panel]})(); renderPanel(false);`);
   const r = await p.evaluate(() => ({ n: document.querySelectorAll('#week-list li').length,
     hd: document.getElementById('week-hd').textContent, shown: getComputedStyle(document.querySelector('.week')).display !== 'none' }));
@@ -158,7 +152,7 @@ for (const [panel, [rows, title]] of Object.entries(EXPECT)) {
   await ctx.close();
 }
 {
-  const { p, ctx } = await open('tv.html', 'panel=verse');
+  const { p, ctx } = await open('tv.html', 'widget=1&panel=verse');
   const both = await p.evaluate(() => {
     const day = riyadhDayNumber, out = [];
     for (const k of [0, 1]) { window.riyadhDayNumber = () => day() + k; out.push(quoteOfDay().title); }
@@ -214,9 +208,9 @@ for (const panel of ['prayers', 'verse', 'shows']) {
   await p.clock.fastForward(299000); const unchanged=await read();
   await p.clock.fastForward(1000); const second=await read();
   await p.clock.fastForward(300000); const third=await read();
-  check('five-minute timer alternates complete verse, hadith, next verse without consecutive repeats',
-    first.title==='آية قرآنية' && unchanged.text===first.text && second.title==='حديث نبوي صحيح'
-    && third.title==='آية قرآنية' && first.text!==second.text && first.text!==third.text && !errors.length,
+  check('five-minute timer shows complete verses only without consecutive repeats',
+    first.title==='آية قرآنية' && unchanged.text===first.text && second.title==='آية قرآنية'
+    && third.title==='آية قرآنية' && first.text!==second.text && first.text!==third.text && second.text!==third.text && !errors.length,
     JSON.stringify({first,second,third,errors}));
   for(const [width,height] of [[960,540],[1280,720],[1920,1080]]){
     await p.setViewportSize({width,height});
@@ -224,7 +218,7 @@ for (const panel of ['prayers', 'verse', 'shows']) {
     const audit=await p.evaluate(()=>{
     const realNow=Date.now, out=[];
     try{
-      for(let slot=0;slot<24;slot++){
+      for(let slot=0;slot<REMINDERS.verses.length;slot++){
         Date.now=()=>slot*REMINDER_INTERVAL_MS;LAST_REMINDER_SLOT=null;renderReminder();
         const item=reminderForSlot(slot), t=document.getElementById('reminder-text'), card=document.getElementById('reminder-card');
         const source=document.getElementById('reminder-source'),clock=document.querySelector('.clockwrap').getBoundingClientRect();
@@ -235,21 +229,21 @@ for (const panel of ['prayers', 'verse', 'shows']) {
           && t.getBoundingClientRect().bottom<=source.getBoundingClientRect().top
           && source.getBoundingClientRect().bottom<=card.getBoundingClientRect().bottom
           && clock.top>=document.querySelector('.top').getBoundingClientRect().bottom
-          && clock.bottom<schedule.top && schedule.bottom<bottom.top && bottom.bottom<=innerHeight);
+          && clock.left>=schedule.right && clock.bottom<=innerHeight && schedule.bottom<bottom.top && bottom.bottom<=innerHeight);
       }
     }finally{Date.now=realNow;}
     return out;
   });
-    check(`all 24 full source records fit without clipping or overlap at ${width}x${height}`,
-      audit.length===24 && audit.every(Boolean),JSON.stringify(audit));
+    check(`all source verses fit without clipping or overlap at ${width}x${height}`,
+      audit.length===12 && audit.every(Boolean),JSON.stringify(audit));
   }
   const prayers=await p.evaluate(()=>({count:document.querySelectorAll('#prayer-schedule li').length,
     selected:document.querySelectorAll('#prayer-schedule li.next').length,
-    next:document.getElementById('schedule-countdown').textContent,
-    source:document.getElementById('prayer-method').textContent}));
-  check('offline schedule has five prayers, one next prayer and a countdown with method and timezone',
+    next:document.getElementById('prayer-count').textContent,
+    technical:!!document.getElementById('prayer-method'),source:PRAYER_SOURCE}));
+  check('offline schedule has five prayers, one next prayer and a countdown without technical text',
     prayers.count===5 && prayers.selected===1 && prayers.next.includes('بعد')
-    && prayers.source.includes('Asia/Riyadh') && prayers.source.includes('18.5') && prayers.source.includes('محلي'),JSON.stringify(prayers));
+    && !prayers.technical && prayers.source.includes('محلي'),JSON.stringify(prayers));
   const afterIsha=await p.evaluate(()=>{const n=nextPrayerInfo(new Date('2026-10-20T23:30:00+03:00'));return {key:n.prayer.key,seconds:n.seconds,tomorrow:n.tomorrow};});
   check('after Isha countdown targets next-day Fajr',afterIsha.key==='Fajr' && afterIsha.tomorrow && afterIsha.seconds>0 && afterIsha.seconds<86400,JSON.stringify(afterIsha));
   await ctx.close();
@@ -276,9 +270,9 @@ for (const panel of ['prayers', 'verse', 'shows']) {
   const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
   await ctx.route(/^https?:/, r => r.abort());
   const p = await ctx.newPage();
-  await p.goto(page('tv.html') + '#teams=136013&panel=matches');
+  await p.goto(page('tv.html') + '#widget=1&teams=136013&panel=matches');
   await p.waitForTimeout(800);
-  const slot = () => p.evaluate(() => document.getElementById('match-row').innerText.replace(/\s+/g, ' ').trim());
+  const slot = () => p.evaluate(() => western(document.getElementById('match-row').innerText).replace(/\s+/g, ' ').trim());
   const game = (id, hoursAgo, score, status) => `({idEvent:'${id}', strHomeTeam:'Al-Hilal', strAwayTeam:'Al-Nassr',
     strTimestamp:new Date(Date.now() - ${hoursAgo} * 36e5).toISOString(), intHomeScore:${score ? score[0] : null},
     intAwayScore:${score ? score[1] : null}, strStatus:'${status}'})`;

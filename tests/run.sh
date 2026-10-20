@@ -12,3 +12,4 @@ python3 tests/launcher_digits_test.py
 python3 tests/upload_test.py
 node tests/page.test.mjs
 node tests/launcher-digits.test.mjs
+node tests/screensaver-final.test.mjs

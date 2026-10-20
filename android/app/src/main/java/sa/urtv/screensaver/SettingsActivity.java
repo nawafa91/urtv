@@ -94,15 +94,12 @@ public class SettingsActivity extends Activity {
                         prefs.setBackgrounds(i == 1 ? "all" : "calm"); d.dismiss(); render();
                     }).show());
 
-        row("الآيات والأحاديث أسفل الساعة", prefs.reminders() ? "تعمل · تتغير كل 5 دقائق" : "متوقفة", R.drawable.ic_eye,
+        row("الآيات القرآنية أسفل الساعة", prefs.reminders() ? "تعمل · تتغير كل 5 دقائق" : "متوقفة", R.drawable.ic_eye,
             () -> { prefs.setReminders(!prefs.reminders()); render(); });
 
         header("المباريات");
         row("الفرق المتابعة (" + arabicNum(prefs.teams().size()) + "/" + arabicNum(Prefs.MAX_TEAMS) + ")", teamsLabel(),
             R.drawable.ic_trophy, new Runnable() { public void run() { manageTeams(); } });
-
-        header("بجانب الساعة");
-        row("المحتوى", Prefs.panelLabel(prefs.panel()), R.drawable.ic_eye, new Runnable() { public void run() { pickPanel(false); } });
 
         header("الشاشة الرئيسية (تلفزيونك)");
         row("بطاقة على الشاشة الرئيسية", Prefs.panelLabel(prefs.homePanel()), R.drawable.ic_eye,

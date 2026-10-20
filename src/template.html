@@ -278,6 +278,31 @@
     .p-match{grid-column:1/-1;text-align:right}
     .mrow{align-items:flex-start}
   }
+  /* Final 16:9 screensaver. Widget mode keeps its existing layout and data panels. */
+  html.screensaver-final .stage{padding:4vh 4vw;grid-template-columns:minmax(0,1.35fr) minmax(0,.85fr);
+    grid-template-rows:auto minmax(0,1fr) auto;column-gap:5vw;row-gap:2.5vh}
+  html.screensaver-final .top{grid-column:1/-1;grid-row:1;flex-direction:row}
+  html.screensaver-final .dates{color:#FFFDF6}
+  html.screensaver-final .markets{color:#FFFDF6}
+  html.screensaver-final .mid{grid-column:1;grid-row:2/4;display:flex;align-items:flex-start;justify-content:flex-end;min-height:0}
+  html.screensaver-final .clockwrap{width:100%;align-items:flex-start}
+  html.screensaver-final .clock{font-size:clamp(86px,min(16vw,24vh),280px);line-height:1;max-width:100%}
+  html.screensaver-final .reminder-card{width:100%;margin-top:2.5vh;padding:1.8vh 1.8vw;background:rgba(4,14,9,.52)}
+  html.screensaver-final .reminder-text{font-size:clamp(17px,1.6vw,31px);line-height:1.8;margin:1vh 0;color:#FFFDF6}
+  html.screensaver-final .reminder-title,html.screensaver-final .reminder-source{font-size:clamp(12px,1vw,20px)}
+  html.screensaver-final .prayer-schedule{grid-column:2;grid-row:2;align-self:start;
+    padding:1.8vh 1.3vw;border:1px solid rgba(220,184,111,.25);border-radius:12px;background:rgba(4,14,9,.52)}
+  html.screensaver-final .schedule-heading{font-size:clamp(14px,1.15vw,22px);color:var(--gold);margin-bottom:1vh}
+  html.screensaver-final .prayer-schedule ol{grid-template-columns:1fr;gap:.8vh;margin:0}
+  html.screensaver-final .prayer-schedule li{display:flex;align-items:center;justify-content:space-between;
+    padding:1vh 1vw;font-size:clamp(15px,1.2vw,23px);color:#FFFDF6}
+  html.screensaver-final .prayer-schedule .prayer-at{margin:0;font-size:clamp(17px,1.5vw,29px)}
+  html.screensaver-final .bottom{grid-column:2;grid-row:3;grid-template-columns:1fr 1fr;gap:1vw;border:0;padding:0;align-items:stretch}
+  html.screensaver-final .bottom .panel{padding:1.4vh .9vw;border:1px solid rgba(220,184,111,.25);border-radius:12px;
+    background:rgba(4,14,9,.52);text-align:center;display:flex;flex-direction:column;justify-content:center}
+  html.screensaver-final .bottom .label{font-size:clamp(12px,.95vw,18px);letter-spacing:0;white-space:normal}
+  html.screensaver-final .bottom .big{font-size:clamp(18px,1.55vw,30px);justify-content:center;flex-wrap:wrap;gap:.25em}
+  html.screensaver-final .bottom .sub{font-size:clamp(11px,.85vw,17px);white-space:normal;line-height:1.5}
 </style>
 </head>
 <body>
@@ -360,7 +385,7 @@
 </main>
 
 <script>
-// daily background: one photo per Riyadh day, deterministic
+// Bundled calm fallbacks; the full hosted collection uses the persisted shuffled cycle below.
 const BGS = [
 __BG_SET__
 ];
@@ -397,12 +422,12 @@ const CONFIG = {
   weekWindowDays: 7,
   // #widget=1: only the card, on a transparent page (the launcher's home screen shows it)
   widget: _Q.get('widget') === '1',
-  backgrounds: _Q.get('backgrounds') === 'all' ? 'all' : 'calm',
+  backgrounds: _Q.get('backgrounds') === 'calm' ? 'calm' : 'all',
   reminders: _Q.get('reminders') !== '0',
 };
 
 // Retire the shows card only on the screensaver, including links saved by older apps.
-if(!CONFIG.widget && CONFIG.panel === 'shows') CONFIG.panel = 'none';
+if(!CONFIG.widget){ CONFIG.panel = 'none'; document.documentElement.classList.add('screensaver-final'); }
 
 // The launcher widget retains its existing typography.
 const GREG = 'ar-SA-u-ca-gregory-nu-' + (CONFIG.widget ? 'arab' : 'latn');
@@ -587,7 +612,7 @@ function tickPrayer(){
     const gap = (x.key === 'Dhuhr' && isFriday()) ? 0 : (CONFIG.iqama[x.key] || 0);
     return mins >= at && mins < at + gap;
   });
-  if(cur){
+  if(cur && CONFIG.widget){
     const left = (cur.h*60 + cur.mi + CONFIG.iqama[cur.key]) - mins;
     panel.classList.add('now');
     elL.textContent = 'حان الآن';
@@ -625,9 +650,11 @@ function renderPrayerSchedule(){
   const info = nextPrayerInfo(), next = info.prayer;
   list.innerHTML = PRAYERS.map(p => `<li class="${p.key === next.key ? 'next' : ''}" ${p.key === next.key ? 'aria-current="true"' : ''}><span>${esc(p.name)}</span><span class="prayer-at">${fmt12(p.h,p.mi)}</span></li>`).join('');
   document.getElementById('schedule-heading').textContent = 'مواقيت اليوم · ' + CONFIG.city;
-  document.getElementById('schedule-countdown').textContent = 'القادمة: ' + next.name + (info.tomorrow ? ' غدًا' : '')
+  const countdown = document.getElementById('schedule-countdown');
+  if(countdown) countdown.textContent = 'القادمة: ' + next.name + (info.tomorrow ? ' غدًا' : '')
     + ' · ' + fmt12(next.h,next.mi) + ' · بعد ' + humanRemaining(info.seconds);
-  document.getElementById('prayer-method').textContent = PRAYER_SOURCE + ' · ' + CONFIG.timezone + ' · أم القرى: الفجر 18.5°، العشاء بعد المغرب 90 دقيقة (120 في رمضان)، العصر: ظل واحد'
+  const method = document.getElementById('prayer-method');
+  if(method) method.textContent = PRAYER_SOURCE + ' · ' + CONFIG.timezone + ' · أم القرى: الفجر 18.5°، العشاء بعد المغرب 90 دقيقة (120 في رمضان)، العصر: ظل واحد'
     + (info.tomorrow ? ' · فجر الغد محسوب محليًا' : '');
 }
 
@@ -1160,10 +1187,10 @@ const REMINDERS = __REMINDERS__;
 const REMINDER_INTERVAL_MS = 5 * 60 * 1000;
 let LAST_REMINDER_SLOT = null;
 function reminderForSlot(slot){
-  const type = slot % 2 === 0 ? 'verse' : 'hadith';
-  const pool = type === 'verse' ? REMINDERS.verses : REMINDERS.hadiths;
+  const type = 'verse';
+  const pool = REMINDERS.verses;
   if(!pool.length) return null;
-  return {type, record:pool[Math.floor(slot / 2) % pool.length]};
+  return {type, record:pool[((slot % pool.length) + pool.length) % pool.length]};
 }
 function renderReminder(){
   if(CONFIG.widget) return;
@@ -1174,7 +1201,7 @@ function renderReminder(){
   const item = reminderForSlot(slot);
   if(!item){card.hidden = true;return;}
   const r = item.record;
-  // textContent retains the full source text, including the full isnad for each hadith.
+  // Keep the complete verified verse. The hadith source bundle remains available to the launcher widget.
   document.getElementById('reminder-title').textContent = item.type === 'verse' ? 'آية قرآنية' : 'حديث نبوي صحيح';
   document.getElementById('reminder-text').textContent = r.text;
   document.getElementById('reminder-source').textContent = item.type === 'verse'
@@ -1250,20 +1277,17 @@ function pixelShift(){
 // Background photos: the hosted set in photos/ (photos/index.json in the repo). A hosted photo is used only
 // once it has loaded; offline, or if it fails, a bundled one is shown, so the screen is never empty.
 const PHOTO_BASE = '__PHOTO_BASE__';
-let REMOTE_BGS = (()=>{ try{ return JSON.parse(localStorage.getItem('photoIndex') || '[]'); }catch(e){ return []; } })();
-
-async function loadPhotoIndex(){
-  try{
-    const r = await fetchT(PHOTO_BASE + 'index.json', 15000);
-    if(!r.ok) return;
-    const list = (await r.json()).filter(p => p && p.f);
-    if(list.length){
-      REMOTE_BGS = list;
-      try{ localStorage.setItem('photoIndex', JSON.stringify(list)); }catch(e){}
-    }
-  }catch(e){}
+const PHOTO_INDEX = __PHOTO_INDEX__; // bundled index, no need to fetch all images or be online at startup
+function validPhotoIndex(list){
+  if(!Array.isArray(list)) return [];
+  const seen=new Set();
+  return list.filter(p=>p && /^[A-Za-z0-9_-]+\.jpg$/.test(p.f) && !seen.has(p.f) && seen.add(p.f));
 }
-
+let REMOTE_BGS = validPhotoIndex(PHOTO_INDEX);
+async function loadPhotoIndex(){
+  // An immutable, build-time index matches the approved photo commit. No moving master requests.
+  return REMOTE_BGS;
+}
 let REVEALED = false;
 function reveal(){
   if(REVEALED) return;
@@ -1287,53 +1311,61 @@ function showBackground(url, b){
   if(cr) cr.textContent = b.c ? 'الصورة: ' + b.c : '';
 }
 
-// Every 4 days a new random set of 5 hosted photos (same draw as the launcher: Park-Miller generator seeded
-// by the 4-day period), rotating every 30 minutes. Only the photo on screen is downloaded.
-const PHOTO_SET = 5, PHOTO_PERIOD_DAYS = 4, PHOTO_SLOT_MIN = 30;
+
+const PHOTO_INTERVAL_MS = 30 * 60 * 1000;
+const PHOTO_CYCLE_KEY = 'urtv-photo-cycle-v1';
+let PHOTO_CYCLE = null, PHOTO_TIMER = null, BG_REQUEST = 0, BG_LOADING = '', BG_SHOWN = '';
 function riyadhDayNumber(){
   const p = riyadhParts();
   return Math.floor(Date.UTC(p.y, p.mo - 1, p.d) / 86400000);
 }
-function photoSet(n){
-  const period = Math.floor(riyadhDayNumber() / PHOTO_PERIOD_DAYS);
-  let seed = (period % 2147483646) + 1;
-  const pick = [];
-  for(let guard = 0; pick.length < Math.min(PHOTO_SET, n) && guard < 1000; guard++){
-    seed = (seed * 48271) % 2147483647;
-    const k = seed % n;
-    if(!pick.includes(k)) pick.push(k);
-  }
-  return pick;
+function shuffledPhotos(names, previous){
+  const result=names.slice();
+  for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}
+  // Even the boundary between complete cycles must not repeat the previous image immediately.
+  if(result.length>1 && result[0]===previous) [result[0],result[1]]=[result[1],result[0]];
+  return result;
 }
-let BG_SLOT = -1, PREFETCHED = false;
+function savePhotoCycle(){try{localStorage.setItem(PHOTO_CYCLE_KEY,JSON.stringify(PHOTO_CYCLE));}catch(e){}}
+function currentPhoto(pool, now=Date.now()){
+  const names=pool.map(p=>p.f), signature=names.slice().sort().join('|');
+  if(!PHOTO_CYCLE){try{PHOTO_CYCLE=JSON.parse(localStorage.getItem(PHOTO_CYCLE_KEY)||'null');}catch(e){}}
+  const c=PHOTO_CYCLE;
+  if(!c || c.signature!==signature || !Array.isArray(c.order) || c.order.length!==names.length
+    || new Set(c.order).size!==names.length || !c.order.every(f=>names.includes(f))
+    || !Number.isInteger(c.index) || c.index<0 || c.index>=names.length || !Number.isFinite(c.nextAt)){
+    PHOTO_CYCLE={signature,order:shuffledPhotos(names),index:0,nextAt:now+PHOTO_INTERVAL_MS};
+  }else if(now>=c.nextAt){
+    const previous=c.order[c.index];
+    if(++c.index>=c.order.length){c.order=shuffledPhotos(names,previous);c.index=0;}
+    // Time spent asleep does not skip unseen photos in the cycle.
+    c.nextAt=now+PHOTO_INTERVAL_MS;
+  }else if(c.nextAt-now>PHOTO_INTERVAL_MS){c.nextAt=now+PHOTO_INTERVAL_MS;} // clock correction
+  savePhotoCycle();
+  return pool.find(p=>p.f===PHOTO_CYCLE.order[PHOTO_CYCLE.index]);
+}
 function applyBackground(force){
-  try {
-    const p = riyadhParts();
-    const slot = riyadhDayNumber() * 48 + Math.floor((p.h * 60 + p.mi) / PHOTO_SLOT_MIN);
-    if(slot === BG_SLOT && !force) return;
-    BG_SLOT = slot;
-    const pool = CONFIG.backgrounds === 'all' ? REMOTE_BGS : REMOTE_BGS.filter(x => BGS.some(b => b.f === x.f));
-    const set = pool.length ? photoSet(pool.length).map(k => pool[k]) : [];
-    const local = BGS[slot % BGS.length];
-    if(!set.length){ showBackground(local.u, local); return; }
-    const b = set[slot % set.length], url = PHOTO_BASE + b.f;
-    // First photo: wait briefly for the hosted one (the app serves it from disk at once) so the screen
-    // doesn't flash a bundled photo first; slow network → bundled one, swapped when the hosted one arrives.
-    let done = false;
-    const fallback = () => { if(!done && !document.querySelector('.photo').style.backgroundImage) showBackground(local.u, local); };
-    const t = setTimeout(fallback, 1200);
-    const img = new Image();
-    img.onload = () => { done = true; clearTimeout(t); showBackground(url, b); };
-    img.onerror = () => { clearTimeout(t); fallback(); done = true; };
-    img.src = url;
-    // fetch the rest of the set once, quietly, so the app has each one on disk before its turn
-    if(!PREFETCHED){ PREFETCHED = true; setTimeout(() => set.forEach(x => { new Image().src = PHOTO_BASE + x.f; }), 20000); }
-  } catch(e) {}
+  if(CONFIG.widget) return;
+  const pool=CONFIG.backgrounds==='calm' ? BGS : REMOTE_BGS;
+  const local=BGS[riyadhDayNumber()%BGS.length];
+  if(!pool.length){showBackground(local.u,local);return;}
+  const b=currentPhoto(pool), url=b.u || PHOTO_BASE+b.f;
+  clearTimeout(PHOTO_TIMER);
+  PHOTO_TIMER=setTimeout(()=>applyBackground(false),Math.max(1,PHOTO_CYCLE.nextAt-Date.now()));
+  const ph=document.querySelector('.photo');
+  // Keep the current valid image while the next one loads; bundled fallback on the first start.
+  if(!ph.style.backgroundImage) showBackground(local.u,local);
+  if(url===BG_LOADING || url===BG_SHOWN) return;
+  const request=++BG_REQUEST;BG_LOADING=url;
+  const img=new Image();
+  img.onload=()=>{if(request!==BG_REQUEST)return;BG_LOADING='';BG_SHOWN=url;showBackground(url,b);};
+  img.onerror=()=>{if(request!==BG_REQUEST)return;BG_LOADING='';};
+  img.src=url; // exactly one image, no collection prefetch
 }
 
 // Last painted panels, shown at once on the next start while fresh data loads.
-const SNAP_KEY = (CONFIG.widget ? 'snap2:' : 'snap3:') + location.hash;   // bump when the panels' markup changes
-const SNAP_SEL = ['.markets', '#week-list', '#match-row'];
+const SNAP_KEY = (CONFIG.widget ? 'snap2:' : 'final1:') + location.hash;
+const SNAP_SEL = CONFIG.widget ? ['.markets', '#week-list', '#match-row'] : ['.wxline', '.wxsub'];
 function saveSnap(){
   try{ localStorage.setItem(SNAP_KEY, JSON.stringify(SNAP_SEL.map(q => (document.querySelector(q)||{}).innerHTML || ''))); }catch(e){}
 }
@@ -1346,10 +1378,10 @@ function restoreSnap(){
 
 function boot(){
   if(CONFIG.widget){ bootWidget(); return; }
-  if(CONFIG.panel === 'none'){
-    document.querySelector('.week').remove();
-    document.querySelector('.mid').classList.add('no-card');
-  }
+  // Remove retired screen-only elements; the shared launcher widget never enters this branch.
+  document.querySelectorAll('.week,.mk,.p-match,.subline,#prayer-method,#schedule-countdown').forEach(el=>el.remove());
+  document.getElementById('reminder-card').setAttribute('aria-label','آية قرآنية');
+  document.querySelector('.bottom').prepend(document.querySelector('.p-mid'));
   restoreSnap();
   renderReminder();
   setInterval(renderReminder, 1000); // slot-based catch-up after sleep and every five-minute boundary
@@ -1363,33 +1395,21 @@ function boot(){
   document.title = 'شاشة تلفزيونك';
   applyBackground(true);
   loadPhotoIndex().then(() => applyBackground(true));
-  setInterval(() => applyBackground(false), 60*1000);
+  addEventListener('online',()=>applyBackground(true));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)applyBackground(false);});
   tickClock(); tickDates(); tickRamadan();
-  TICKERS.forEach(loadTicker);
-  if(CONFIG.panel !== 'none' && CONFIG.panel !== 'shows') renderPanel(false);   // its own data arrives with prayers, weather, matches
-  loadPrayers(); loadMatches(); if(CONFIG.panel === 'shows') loadWeek(); loadWeather();
+  loadPrayers(); loadWeather();
   applyNight(); pixelShift();
-
   setInterval(tickClock, 1000);
-  setInterval(()=>{ tickDates(); tickPrayer(); tickRamadan(); if(CONFIG.panel === 'prayers') renderPanel(false); }, 15000);
-  setInterval(() => renderMatches(false), 60000);
-  setInterval(() => renderMatches(true), CONFIG.matchPageMs);
-  setInterval(loadLive, 2*60000);
+  setInterval(()=>{ tickDates(); tickPrayer(); tickRamadan(); }, 15000);
   setInterval(loadPrayers, 6*3600*1000);
-  setInterval(loadMatches, 30*60*1000);
-  setInterval(()=>TICKERS.forEach(loadTicker), 15*60*1000);
-  if(CONFIG.panel === 'shows') setInterval(loadWeek, 6*3600*1000);
   setInterval(loadWeather, 30*60*1000);
-  setInterval(()=>{
-    if(CONFIG.panel === 'shows' && WEEK_POOL.length > WEEK_ROWS){ WEEK_PAGE++; renderWeekPage(true); }
-    if(CONFIG.panel === 'matches'){ LIST_PAGE++; renderPanel(matchRows().length > WEEK_ROWS); }
-  }, 25*1000);
   setInterval(applyNight, 60*1000);
   setInterval(pixelShift, 4*60*1000);
   let lastDay = new Intl.DateTimeFormat('en-CA',{timeZone:CONFIG.timezone}).format(new Date());
   setInterval(()=>{
     const d = new Intl.DateTimeFormat('en-CA',{timeZone:CONFIG.timezone}).format(new Date());
-    if(d !== lastDay){ lastDay = d; loadPhotoIndex().then(() => applyBackground(true)); tickDates(); tickRamadan(); loadPrayers(); loadMatches(); if(CONFIG.panel === 'shows') loadWeek(); loadWeather(); renderPanel(false); }
+    if(d !== lastDay){ lastDay = d; loadPhotoIndex().then(() => applyBackground(true)); tickDates(); tickRamadan(); loadPrayers(); loadWeather(); }
   }, 60*1000);
 }
 

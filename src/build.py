@@ -180,6 +180,7 @@ def data_uri(path, mime):
 def main():
     html = (ROOT / "src/template.html").read_text(encoding="utf-8")
     html = html.replace("__PHOTO_BASE__", REPO + "photos/")
+    html = html.replace("__PHOTO_INDEX__", json.dumps(json.loads((ROOT / "photos/index.json").read_text()), ensure_ascii=False))
     # 2 KB, so inlined in both pages
     html = html.replace("__F_MARKS__", data_uri(ROOT / "assets/fonts/NotoNaskhArabic-Marks.woff2", "font/woff2"))
     teams = json.loads((ROOT / "assets/shared/teams-ar.json").read_text(encoding="utf-8"))
